@@ -4,6 +4,7 @@
   "private": true,
   "description": "Clean Playwright + Cucumber (TypeScript) E2E test framework scaffold for a small/medium SaaS product.",
   "scripts": {
+    "test": "cucumber-js",
     "test:e2e": "cucumber-js",
     "test:e2e:headed": "HEADLESS=false cucumber-js",
     "test:e2e:debug": "PWDEBUG=1 HEADLESS=false cucumber-js"
