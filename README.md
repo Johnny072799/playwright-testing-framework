@@ -101,6 +101,7 @@ npm run test -- -p my-tag
 | `npm run test -- -p smoke` | Run only the smoke profile |
 | `npm run test -- -t @my-tag` | Run only scenarios with `@my-tag` |
 | `npm run test:e2e:debug` | Run with Playwright inspector for debugging |
+| `npm run test:e2e:debug -- -t @my-tag` | Run with Playwright inspector for debugging on specific tests|
 
 ---
 
@@ -163,6 +164,7 @@ Steps stay thin; interaction logic lives in page objects. New step files in `ste
 | `BASE_URL` | Yes | Base URL of the app under test |
 | `HEADLESS` | No | `true` = headless, `false` = visible browser (default: `true`) |
 | `START_MAXIMIZED` | No | `true` = maximize window when headed (default: `false`) |
+| `PARALLEL` | No | Number of workers for parallel execution (default: `1` = sequential) |
 | `TEST_USER_EMAIL` | No | Optional test user email |
 | `TEST_USER_PASSWORD` | No | Optional test user password |
 

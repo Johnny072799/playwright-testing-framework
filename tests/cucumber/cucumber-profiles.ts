@@ -1,16 +1,18 @@
 import path from "path";
+import { config } from "./support/config";
 
 const projectRoot = path.resolve(__dirname, "..", "..");
 
 /**
  * Shape of a Cucumber profile. Aligns with Cucumber's configuration options.
- * Each profile can override paths, tags, require, format, etc.
+ * Each profile can override paths, tags, require, format, parallel, etc.
  */
 export interface CucumberProfile {
   paths?: string[];
   require?: string[];
   requireModule?: string[];
   tags?: string;
+  parallel?: number;
   format?: string | string[] | [string, string?][];
   publishQuiet?: boolean;
   worldParameters?: Record<string, unknown>;
@@ -28,6 +30,7 @@ const baseProfile: CucumberProfile = {
   requireModule: ["ts-node/register/transpile-only"],
   publishQuiet: true,
   format: ["progress"],
+  parallel: config.parallel,
   worldParameters: {}
 };
 
