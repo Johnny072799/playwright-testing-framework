@@ -1,5 +1,4 @@
 {
   "cucumber.glue": ["tests/cucumber/**/*.ts"],
-  "cucumber.features": ["tests/cucumber/features/**/*.feature"],
-  "cucumberautocomplete.steps": ["tests/cucumber/**/*.ts"]
+  "cucumber.features": ["tests/cucumber/features/**/*.feature"]
 }
