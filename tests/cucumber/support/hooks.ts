@@ -28,11 +28,15 @@ BeforeAll(async function () {
     throw new Error("BASE_URL is not configured.");
   }
 
-  const headed = process.env.HEADLESS === "false";
+  const launchOptions: Parameters<typeof chromium.launch>[0] = {
+    headless: config.headless
+  };
 
-  browser = await chromium.launch({
-    headless: !headed
-  });
+  if (config.startMaximized && !config.headless) {
+    launchOptions.args = ["--start-maximized"];
+  }
+
+  browser = await chromium.launch(launchOptions);
 });
 
 Before(async function (this: CustomWorld) {
@@ -40,7 +44,12 @@ Before(async function (this: CustomWorld) {
     throw new Error("Playwright browser was not initialized. Did the BeforeAll hook run?");
   }
 
-  const context = await browser.newContext();
+  const contextOptions: Parameters<typeof browser.newContext>[0] = {};
+  if (config.startMaximized && !config.headless) {
+    contextOptions.viewport = null;
+  }
+
+  const context = await browser.newContext(contextOptions);
   const page = await context.newPage();
 
   context.setDefaultTimeout(DEFAULT_PLAYWRIGHT_TIMEOUT_MS);

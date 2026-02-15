@@ -11,10 +11,17 @@ if (!process.env.CI) {
   }
 }
 
+function parseBool(value: string | undefined, defaultValue: boolean): boolean {
+  if (value === undefined || value.trim() === "") return defaultValue;
+  return value.toLowerCase().trim() === "true";
+}
+
 type TestConfig = {
   baseUrl: string;
   testUserEmail?: string;
   testUserPassword?: string;
+  headless: boolean;
+  startMaximized: boolean;
 };
 
 function requireEnv(name: string): string {
@@ -31,6 +38,8 @@ function requireEnv(name: string): string {
 export const config: TestConfig = {
   baseUrl: requireEnv("BASE_URL"),
   testUserEmail: process.env.TEST_USER_EMAIL,
-  testUserPassword: process.env.TEST_USER_PASSWORD
+  testUserPassword: process.env.TEST_USER_PASSWORD,
+  headless: parseBool(process.env.HEADLESS, true),
+  startMaximized: parseBool(process.env.START_MAXIMIZED, false)
 };
 
