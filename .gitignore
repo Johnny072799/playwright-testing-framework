@@ -137,3 +137,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# E2E failure artifacts (screenshots, traces) - local debugging only
+artifacts/

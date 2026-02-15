@@ -172,9 +172,34 @@ Steps stay thin; interaction logic lives in page objects. New step files in `ste
 
 ## Failure artifacts
 
-On failure, the framework saves:
+When a scenario fails, the framework saves two kinds of artifacts to help you debug:
 
-- **Screenshots** → `artifacts/screenshots/`
-- **Playwright traces** → `artifacts/traces/`
+### Screenshots
 
-These are also attached to the Cucumber report so you can inspect them in the output.
+**Location:** `artifacts/screenshots/`  
+**Format:** PNG (full-page screenshot)  
+**Filename:** Scenario name, sanitized (e.g. `open_the_homepage_and_verify_the_title_contains_example_.png`)
+
+A full-page screenshot of the browser at the moment of failure. Use it to see the UI state when the test failed—useful when an assertion fails or an element is missing.
+
+**How to use:** Open the `.png` file in any image viewer or in the Cucumber report if you use a reporter that shows attachments.
+
+### Playwright traces
+
+**Location:** `artifacts/traces/`  
+**Format:** `.zip` (Playwright trace archive)  
+**Filename:** Scenario name, sanitized (e.g. `open_the_homepage_and_verify_the_title_contains_example_.zip`)
+
+A trace is a detailed recording of the test run: screenshots at each action, DOM snapshots, network requests, and a timeline. It lets you step through the test and inspect the page at any point.
+
+**How to use:** Open the trace in Playwright’s Trace Viewer:
+
+```bash
+npx playwright show-trace artifacts/traces/<trace-filename>.zip
+```
+
+The Trace Viewer opens in your browser so you can move through the timeline, inspect DOM, and view network activity at each step.
+
+### Cucumber report attachments
+
+Both the screenshot and trace are attached to the failed scenario in the Cucumber report. If your reporter displays attachments (e.g. HTML report or CI output), you can view them there without opening the files directly.
