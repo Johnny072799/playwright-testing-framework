@@ -1,0 +1,20 @@
+{
+  "name": "cucumber-testing-framework",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clean Playwright + Cucumber (TypeScript) E2E test framework scaffold for a small/medium SaaS product.",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:e2e": "cucumber-js",
+    "test:e2e:headed": "HEADLESS=false cucumber-js",
+    "test:e2e:debug": "PWDEBUG=1 HEADLESS=false cucumber-js"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.6.0",
+    "@types/node": "^22.10.0",
+    "dotenv": "^16.4.5",
+    "playwright": "^1.57.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
