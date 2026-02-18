@@ -21,6 +21,10 @@ export class LoginPage {
     return this.page.locator(".oxd-brand-banner");
   }
 
+  errorMessage(): Locator {
+    return this.page.locator(".oxd-alert-content-text");
+  }
+
   async openLoginPage(): Promise<void> {
     await this.page.goto(config.baseUrl);
   }
@@ -46,9 +50,7 @@ export class LoginPage {
     );
   }
 
-  async loginAsCustomer(): Promise<void> {
-    const email = config.testUserEmail;
-    const password = config.testUserPassword;
+  async loginToOrangeHRMPortal(email?: string, password?: string): Promise<void> {
     if (!email || !password) {
       throw new Error(
         "Missing USER_EMAIL or USER_PASSWORD. Add them to tests/cucumber/env/.env"

@@ -1,0 +1,76 @@
+---
+description: Page Object Pattern best practices for E2E tests
+globs: tests/cucumber/**/*.ts
+alwaysApply: false
+---
+
+# Page Object Pattern Best Practices
+
+## Core Principle: Separation of Concerns
+
+**Steps stay thin** - they create page objects and call methods; no locators or config logic.
+
+**Page objects hold all locators, interaction logic, and assertions.**
+
+## Rules
+
+### 1. All Locators Belong in Page Objects
+
+❌ **BAD** - Locator in step definition:
+```typescript
+Then("I should see the error message", async function (this: CustomWorld) {
+  const errorLocator = this.page.locator(".oxd-alert-content-text");
+  const errorText = await errorLocator.textContent();
+});
+```
+
+✅ **GOOD** - Locator in page object:
+```typescript
+// In login-page.ts
+errorMessage(): Locator {
+  return this.page.locator(".oxd-alert-content-text");
+}
+
+// In login-steps.ts
+Then("I should see the error message", async function (this: CustomWorld) {
+  const loginPage = new LoginPage(this.page);
+  const errorText = await loginPage.errorMessage().textContent();
+});
+```
+
+### 2. Page Objects Return Locators, Not Direct Actions
+
+❌ **BAD** - Direct action in locator method:
+```typescript
+errorMessage(): Promise<string | null> {
+  return this.page.locator(".oxd-alert-content-text").textContent();
+}
+```
+
+✅ **GOOD** - Return Locator, call action in step or page method:
+```typescript
+errorMessage(): Locator {
+  return this.page.locator(".oxd-alert-content-text");
+}
+```
+
+### 3. Steps Only Orchestrate, Page Objects Execute
+
+Steps should:
+- Create page objects
+- Call page object methods
+- Use world state for data sharing
+- Perform assertions on results
+
+Page objects should:
+- Hold all locators
+- Contain interaction logic (fill, click, etc.)
+- Handle waiting/retry logic
+- Import config and utilities as needed
+
+### 4. Naming Conventions
+
+- Page object files: `name-page.ts` (kebab-case + `-page`)
+- Page object classes: `PascalCase` (e.g., `LoginPage`)
+- Locator methods: `camelCase()` returning `Locator`
+- Action methods: `async camelCase()` returning `Promise<void>` or result type
