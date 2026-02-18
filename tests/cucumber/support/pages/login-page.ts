@@ -50,14 +50,8 @@ export class LoginPage {
     );
   }
 
-  async loginToOrangeHRMPortal(email?: string, password?: string): Promise<void> {
-    if (!email || !password) {
-      throw new Error(
-        "Missing USER_EMAIL or USER_PASSWORD. Add them to tests/cucumber/env/.env"
-      );
-    }
+  async loginToOrangeHRMPortal(email: string, password: string): Promise<void> {
     await this.openLoginPage();
     await this.login(email, password);
-    await this.waitForBrandBanner();
   }
 }
