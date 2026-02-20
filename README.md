@@ -109,30 +109,42 @@ npm run test -- -p my-tag
 
 ```
 tests/cucumber/
-├── features/           # Gherkin feature files (.feature)
-├── steps/              # Step definitions (Given, Then, etc.)
-├── support/            # Hooks, world, config, page objects, utilities
-│   ├── pages/          # Page object classes (all locators and logic)
-│   ├── wait-for.ts     # Retry utility for waiting on conditions
-│   ├── config.ts       # Environment/config
-│   ├── world.ts        # CustomWorld (page, context, state)
-│   ├── worldState.ts   # Key-value store for sharing data between steps
-│   └── hooks.ts        # Before/After hooks (browser lifecycle)
+├── features/                   # Gherkin feature files (.feature)
+│   ├── login/                  # Domain folder: features grouped by area
+│   │   ├── login.feature
+│   │   └── forgot-password.feature
+│   └── example.feature         # Or at root for standalone features
+├── steps/                      # Step definitions (Given, When, Then)
+│   ├── login/                  # Domain folder: steps grouped by area
+│   │   ├── login-steps.ts              # Page/flow steps (being on page, login actions)
+│   │   ├── login-user-test-data-steps.ts  # User test data setup
+│   │   └── forgot-password-steps.ts
+│   └── example-steps.ts        # Or at root for standalone steps
+├── support/                    # Hooks, world, config, page objects, utilities
+│   ├── pages/                  # Page object classes (all locators and logic)
+│   │   ├── login-page.ts
+│   │   └── forgot-password-page.ts
+│   ├── user-test-data.ts       # UserData class and User interface
+│   ├── wait-for.ts             # Retry utility for waiting on conditions
+│   ├── config.ts               # Environment/config
+│   ├── world.ts                # CustomWorld (page, context, state)
+│   ├── worldState.ts           # Key-value store for sharing data between steps
+│   └── hooks.ts                # Before/After hooks (browser lifecycle)
 ├── env/
-│   ├── .env.example    # Template for env vars
-│   └── .env            # Your local env (gitignored)
-└── cucumber-profiles.ts # Profile definitions (smoke, regression, etc.)
+│   ├── .env.example            # Template for env vars
+│   └── .env                    # Your local env (gitignored)
+└── cucumber-profiles.ts        # Profile definitions (smoke, regression, etc.)
 ```
 
 **How it fits together**
 
-1. **Features** describe behavior in Gherkin (Given/When/Then).
-2. **Steps** are thin: they create page objects and call methods; no locators or config logic.
+1. **Features** describe behavior in Gherkin (Given/When/Then). Group by domain in subfolders (e.g. `features/login/`).
+2. **Steps** are thin: they create page objects and call methods; no locators or config logic. Group by domain in subfolders (e.g. `steps/login/`).
 3. **Page objects** hold all locators, interaction logic, and assertions. They may import config and utilities (e.g. `wait-for.ts`) for retry logic.
-4. **World** gives each scenario a fresh `page`, `context`, and `state`.
+4. **World** gives each scenario a fresh `page`, `context`, and `state`. Use `state.get<T>(key)` and `state.set(key, value)` to share data between steps.
 5. **Hooks** start/stop the browser and capture screenshots on failure.
 
-Steps stay thin; all locators and logic live in page objects. New step files in `steps/` are picked up automatically via a glob.
+Steps stay thin; all locators and logic live in page objects. New step files in `steps/` (including subfolders) are picked up automatically via a glob.
 
 ---
 
@@ -142,10 +154,15 @@ Steps stay thin; all locators and logic live in page objects. New step files in 
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Feature files | `name.feature` (lowercase, descriptive) | `example.feature` |
-| Step definitions | `name-steps.ts` (kebab-case + `-steps`) | `example-steps.ts` |
-| Page objects | `name-page.ts` (kebab-case + `-page`) | `example-page.ts` |
-| Support files | `camelCase.ts` | `world.ts`, `worldState.ts`, `config.ts`, `hooks.ts` |
+| Feature files | `name.feature` (lowercase, kebab-case) | `login.feature`, `forgot-password.feature` |
+| Step definitions | `name-steps.ts` or `domain-purpose-steps.ts` | `login-steps.ts`, `login-user-test-data-steps.ts`, `forgot-password-steps.ts` |
+| Page objects | `name-page.ts` (kebab-case + `-page`) | `login-page.ts`, `forgot-password-page.ts` |
+| Support files | `camelCase.ts` or `kebab-case.ts` | `world.ts`, `worldState.ts`, `config.ts`, `user-test-data.ts` |
+
+**Organization**
+
+- **Domain folders**: Group features and steps by area (e.g. `features/login/`, `steps/login/`).
+- **User test data steps**: Use `{domain}-user-test-data-steps.ts` for steps that set up user credentials in state (e.g. "I am a valid user", "I do not have a valid username").
 
 **Variables and identifiers**
 

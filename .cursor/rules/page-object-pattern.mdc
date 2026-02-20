@@ -74,3 +74,10 @@ Page objects should:
 - Page object classes: `PascalCase` (e.g., `LoginPage`)
 - Locator methods: `camelCase()` returning `Locator`
 - Action methods: `async camelCase()` returning `Promise<void>` or result type
+
+### 5. Step File Organization
+
+- **Domain folders**: Group step files by area, e.g. `steps/login/`, `steps/checkout/`
+- **Flow steps** (`{domain}-steps.ts`): Page navigation, actions, assertions for that page (e.g. "I am on the login page", "I login to the portal")
+- **User test data steps** (`{domain}-user-test-data-steps.ts`): Steps that set up user credentials in world state (e.g. "I am a valid user", "I do not have a valid username")
+- **Feature-specific steps** (`{feature}-steps.ts`): Steps for a specific feature within a domain (e.g. `forgot-password-steps.ts`)

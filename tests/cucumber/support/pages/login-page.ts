@@ -30,6 +30,10 @@ export class LoginPage {
     return this.page.locator(".oxd-input-field-error-message");
   }
 
+  forgotPasswordLink(): Locator {
+    return this.page.locator(".orangehrm-login-forgot");
+  }
+
   async openLoginPage(): Promise<void> {
     await this.page.goto(config.baseUrl);
   }
