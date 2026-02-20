@@ -45,4 +45,3 @@ export class WorldState {
     this.store.clear();
   }
 }
-

@@ -43,7 +43,7 @@ Copy the example env file into your local env:
 cp tests/cucumber/env/.env.example tests/cucumber/env/.env
 ```
 
-Edit `tests/cucumber/env/.env` and set `BASE_URL` to the app you’re testing (e.g. `https://staging.myapp.com`). Other variables are optional.
+Edit `tests/cucumber/env/.env` and set `BASE_URL` (and any other required URLs) to the app you’re testing. For login scenarios, also set `USER_EMAIL` and `USER_PASSWORD`. See `.env.example` for the full list.
 
 ### 4. Run the tests
 
@@ -84,7 +84,7 @@ npm run test -- -p regression
 npm run test -- -p my-tag
 ```
 
-`-- -p smoke` passes the profile flag to the test runner, which “use the smoke profile,” which runs only scenarios tagged `@smoke`. Profiles are defined in `tests/cucumber/cucumber-profiles.ts`; you can add more there.
+`-- -p smoke` passes the profile flag to the test runner, which runs only scenarios tagged `@smoke`. Profiles are defined in `tests/cucumber/cucumber-profiles.ts`; you can add more there.
 
 ### When to use which
 
@@ -101,6 +101,7 @@ npm run test -- -p my-tag
 | `npm run test -- -p smoke` | Run only the smoke profile |
 | `npm run test -- -t @my-tag` | Run only scenarios with `@my-tag` |
 | `npm run test:e2e:debug` | Run with Playwright inspector for debugging |
+| `npm run test:e2e:debug -- -t @login` | Debug with Playwright inspector (tag-specific) |
 
 ---
 
@@ -108,29 +109,42 @@ npm run test -- -p my-tag
 
 ```
 tests/cucumber/
-├── features/           # Gherkin feature files (.feature)
-├── steps/              # Step definitions (Given, Then, etc.)
-├── support/            # Hooks, world, config, page objects
-│   ├── pages/          # Page object classes
-│   ├── config.ts       # Environment/config
-│   ├── world.ts        # CustomWorld (page, context, state)
-│   ├── worldState.ts   # Key-value store for sharing data between steps
-│   └── hooks.ts        # Before/After hooks (browser lifecycle)
+├── features/                   # Gherkin feature files (.feature)
+│   ├── login/                  # Domain folder: features grouped by area
+│   │   ├── login.feature
+│   │   └── forgot-password.feature
+│   └── example.feature         # Or at root for standalone features
+├── steps/                      # Step definitions (Given, When, Then)
+│   ├── login/                  # Domain folder: steps grouped by area
+│   │   ├── login-steps.ts              # Page/flow steps (being on page, login actions)
+│   │   ├── login-user-test-data-steps.ts  # User test data setup
+│   │   └── forgot-password-steps.ts
+│   └── example-steps.ts        # Or at root for standalone steps
+├── support/                    # Hooks, world, config, page objects, utilities
+│   ├── pages/                  # Page object classes (all locators and logic)
+│   │   ├── login-page.ts
+│   │   └── forgot-password-page.ts
+│   ├── user-test-data.ts       # UserData class and User interface
+│   ├── wait-for.ts             # Retry utility for waiting on conditions
+│   ├── config.ts               # Environment/config
+│   ├── world.ts                # CustomWorld (page, context, state)
+│   ├── worldState.ts           # Key-value store for sharing data between steps
+│   └── hooks.ts                # Before/After hooks (browser lifecycle)
 ├── env/
-│   ├── .env.example    # Template for env vars
-│   └── .env            # Your local env (gitignored)
-└── cucumber-profiles.ts # Profile definitions (smoke, regression, etc.)
+│   ├── .env.example            # Template for env vars
+│   └── .env                    # Your local env (gitignored)
+└── cucumber-profiles.ts        # Profile definitions (smoke, regression, etc.)
 ```
 
 **How it fits together**
 
-1. **Features** describe behavior in Gherkin (Given/When/Then).
-2. **Steps** implement those sentences and call page objects.
-3. **Page objects** hold the actual Playwright calls (click, type, assertions).
-4. **World** gives each scenario a fresh `page`, `context`, and `state`.
+1. **Features** describe behavior in Gherkin (Given/When/Then). Group by domain in subfolders (e.g. `features/login/`).
+2. **Steps** are thin: they create page objects and call methods; no locators or config logic. Group by domain in subfolders (e.g. `steps/login/`).
+3. **Page objects** hold all locators, interaction logic, and assertions. They may import config and utilities (e.g. `wait-for.ts`) for retry logic.
+4. **World** gives each scenario a fresh `page`, `context`, and `state`. Use `state.get<T>(key)` and `state.set(key, value)` to share data between steps.
 5. **Hooks** start/stop the browser and capture screenshots on failure.
 
-Steps stay thin; interaction logic lives in page objects. New step files in `steps/` are picked up automatically via a glob.
+Steps stay thin; all locators and logic live in page objects. New step files in `steps/` (including subfolders) are picked up automatically via a glob.
 
 ---
 
@@ -140,10 +154,15 @@ Steps stay thin; interaction logic lives in page objects. New step files in `ste
 
 | Type | Pattern | Example |
 |------|---------|---------|
-| Feature files | `name.feature` (lowercase, descriptive) | `example.feature` |
-| Step definitions | `name-steps.ts` (kebab-case + `-steps`) | `example-steps.ts` |
-| Page objects | `name-page.ts` (kebab-case + `-page`) | `example-page.ts` |
-| Support files | `camelCase.ts` | `world.ts`, `worldState.ts`, `config.ts`, `hooks.ts` |
+| Feature files | `name.feature` (lowercase, kebab-case) | `login.feature`, `forgot-password.feature` |
+| Step definitions | `name-steps.ts` or `domain-purpose-steps.ts` | `login-steps.ts`, `login-user-test-data-steps.ts`, `forgot-password-steps.ts` |
+| Page objects | `name-page.ts` (kebab-case + `-page`) | `login-page.ts`, `forgot-password-page.ts` |
+| Support files | `camelCase.ts` or `kebab-case.ts` | `world.ts`, `worldState.ts`, `config.ts`, `user-test-data.ts` |
+
+**Organization**
+
+- **Domain folders**: Group features and steps by area (e.g. `features/login/`, `steps/login/`).
+- **User test data steps**: Use `{domain}-user-test-data-steps.ts` for steps that set up user credentials in state (e.g. "I am a valid user", "I do not have a valid username").
 
 **Variables and identifiers**
 
@@ -161,18 +180,44 @@ Steps stay thin; interaction logic lives in page objects. New step files in `ste
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `BASE_URL` | Yes | Base URL of the app under test |
+| `USER_EMAIL` | No† | Test user email (required for login scenarios) |
+| `USER_PASSWORD` | No† | Test user password (required for login scenarios) |
 | `HEADLESS` | No | `true` = headless, `false` = visible browser (default: `true`) |
 | `START_MAXIMIZED` | No | `true` = maximize window when headed (default: `false`) |
-| `TEST_USER_EMAIL` | No | Optional test user email |
-| `TEST_USER_PASSWORD` | No | Optional test user password |
+| `PARALLEL` | No | Number of workers for parallel execution (default: `1` = sequential) |
 
 ---
 
 ## Failure artifacts
 
-On failure, the framework saves:
+When a scenario fails, the framework saves two kinds of artifacts to help you debug:
 
-- **Screenshots** → `artifacts/screenshots/`
-- **Playwright traces** → `artifacts/traces/`
+### Screenshots
 
-These are also attached to the Cucumber report so you can inspect them in the output.
+**Location:** `artifacts/screenshots/`  
+**Format:** PNG (full-page screenshot)  
+**Filename:** Scenario name, sanitized (e.g. `open_the_homepage_and_verify_the_title_contains_example_.png`)
+
+A full-page screenshot of the browser at the moment of failure. Use it to see the UI state when the test failed—useful when an assertion fails or an element is missing.
+
+**How to use:** Open the `.png` file in any image viewer or in the Cucumber report if you use a reporter that shows attachments.
+
+### Playwright traces
+
+**Location:** `artifacts/traces/`  
+**Format:** `.zip` (Playwright trace archive)  
+**Filename:** Scenario name, sanitized (e.g. `open_the_homepage_and_verify_the_title_contains_example_.zip`)
+
+A trace is a detailed recording of the test run: screenshots at each action, DOM snapshots, network requests, and a timeline. It lets you step through the test and inspect the page at any point.
+
+**How to use:** Open the trace in Playwright’s Trace Viewer:
+
+```bash
+npx playwright show-trace artifacts/traces/<trace-filename>.zip
+```
+
+The Trace Viewer opens in your browser so you can move through the timeline, inspect DOM, and view network activity at each step.
+
+### Cucumber report attachments
+
+Both the screenshot and trace are attached to the failed scenario in the Cucumber report. If your reporter displays attachments (e.g. HTML report or CI output), you can view them there without opening the files directly.

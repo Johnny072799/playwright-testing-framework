@@ -16,12 +16,19 @@ function parseBool(value: string | undefined, defaultValue: boolean): boolean {
   return value.toLowerCase().trim() === "true";
 }
 
+function parseIntEnv(value: string | undefined, defaultValue: number): number {
+  if (value === undefined || value.trim() === "") return defaultValue;
+  const n = parseInt(value.trim(), 10);
+  return Number.isNaN(n) ? defaultValue : Math.max(1, n);
+}
+
 type TestConfig = {
   baseUrl: string;
   testUserEmail?: string;
   testUserPassword?: string;
   headless: boolean;
   startMaximized: boolean;
+  parallel: number;
 };
 
 function requireEnv(name: string): string {
@@ -37,9 +44,10 @@ function requireEnv(name: string): string {
 
 export const config: TestConfig = {
   baseUrl: requireEnv("BASE_URL"),
-  testUserEmail: process.env.TEST_USER_EMAIL,
-  testUserPassword: process.env.TEST_USER_PASSWORD,
+  testUserEmail: process.env.USER_EMAIL,
+  testUserPassword: process.env.USER_PASSWORD,
   headless: parseBool(process.env.HEADLESS, true),
-  startMaximized: parseBool(process.env.START_MAXIMIZED, false)
+  startMaximized: parseBool(process.env.START_MAXIMIZED, false),
+  parallel: parseIntEnv(process.env.PARALLEL, 1)
 };
 
