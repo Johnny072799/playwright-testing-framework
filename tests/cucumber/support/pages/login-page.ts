@@ -25,6 +25,11 @@ export class LoginPage {
     return this.page.locator(".oxd-alert-content-text");
   }
 
+  /** Field-level validation message (e.g. for blank required fields). */
+  fieldErrorMessage(): Locator {
+    return this.page.locator(".oxd-input-field-error-message");
+  }
+
   async openLoginPage(): Promise<void> {
     await this.page.goto(config.baseUrl);
   }
