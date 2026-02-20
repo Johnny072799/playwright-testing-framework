@@ -46,5 +46,9 @@ export const cucumberProfiles: Record<string, CucumberProfile> = {
   regression: {
     ...baseProfile,
     tags: "@regression"
+  },
+  login: {
+    ...baseProfile,
+    tags: "@login"
   }
 };

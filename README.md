@@ -43,7 +43,7 @@ Copy the example env file into your local env:
 cp tests/cucumber/env/.env.example tests/cucumber/env/.env
 ```
 
-Edit `tests/cucumber/env/.env` and set `BASE_URL` (and any other required URLs) to the app you’re testing. For login scenarios, also set `USER_EMAIL` and `USER_PASSWORD`. See `.env.example` for the full list.
+Edit `tests/cucumber/env/.env` and set `BASE_URL` (and any other required URLs) to the app you’re testing. For login scenarios, also set `USERNAME` and `USER_PASSWORD`. See `.env.example` for the full list.
 
 ### 4. Run the tests
 
@@ -180,7 +180,7 @@ Steps stay thin; all locators and logic live in page objects. New step files in 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `BASE_URL` | Yes | Base URL of the app under test |
-| `USER_EMAIL` | No† | Test user email (required for login scenarios) |
+| `USERNAME` | No† | Test user username (required for login scenarios) |
 | `USER_PASSWORD` | No† | Test user password (required for login scenarios) |
 | `HEADLESS` | No | `true` = headless, `false` = visible browser (default: `true`) |
 | `START_MAXIMIZED` | No | `true` = maximize window when headed (default: `false`) |

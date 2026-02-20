@@ -24,7 +24,7 @@ function parseIntEnv(value: string | undefined, defaultValue: number): number {
 
 type TestConfig = {
   baseUrl: string;
-  testUserEmail?: string;
+  testUsername?: string;
   testUserPassword?: string;
   headless: boolean;
   startMaximized: boolean;
@@ -44,7 +44,7 @@ function requireEnv(name: string): string {
 
 export const config: TestConfig = {
   baseUrl: requireEnv("BASE_URL"),
-  testUserEmail: process.env.USER_EMAIL,
+  testUsername: process.env.USERNAME,
   testUserPassword: process.env.USER_PASSWORD,
   headless: parseBool(process.env.HEADLESS, true),
   startMaximized: parseBool(process.env.START_MAXIMIZED, false),
