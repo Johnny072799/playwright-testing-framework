@@ -74,7 +74,7 @@ The `--` tells npm to pass the rest of the command to Cucumber. You can use any 
 
 ### Profiles
 
-Profiles are named bundles of settings (e.g. which tags to run, format, paths). Think of them as saved configurations. The project defines profiles like `smoke`, `regression`, and `my-tag` that combine the base setup with a specific tag filter.
+Profiles are named bundles of settings (e.g. which tags to run, format, paths). Think of them as saved configurations. The project defines profiles like `smoke`, `regression`, and `login` that combine the base setup with a specific tag filter.
 
 **Commands to run by profile:**
 
@@ -84,7 +84,7 @@ npm run test -- -p regression
 npm run test -- -p my-tag
 ```
 
-`-- -p smoke` passes the profile flag to the test runner, which runs only scenarios tagged `@smoke`. Profiles are defined in `tests/cucumber/cucumber-profiles.ts`; you can add more there.
+`-- -p smoke` passes the profile flag to the test runner, which runs only scenarios tagged `@smoke`. Profiles (`smoke`, `regression`, `login`) are defined in `tests/cucumber/cucumber-profiles.ts`; you can add more there.
 
 ### When to use which
 
@@ -110,21 +110,33 @@ npm run test -- -p my-tag
 ```
 tests/cucumber/
 ├── features/                   # Gherkin feature files (.feature)
-│   ├── login/                  # Domain folder: features grouped by area
+│   ├── admin/                  # Domain: admin features
+│   │   └── user-management/
+│   │       └── users.feature
+│   ├── login/                  # Domain: login features
 │   │   ├── login.feature
 │   │   └── forgot-password.feature
-│   └── example.feature         # Or at root for standalone features
+│   └── example.feature         # Standalone features
 ├── steps/                      # Step definitions (Given, When, Then)
-│   ├── login/                  # Domain folder: steps grouped by area
-│   │   ├── login-steps.ts              # Page/flow steps (being on page, login actions)
-│   │   ├── login-user-test-data-steps.ts  # User test data setup
+│   ├── admin/
+│   │   └── user-management/
+│   │       └── users-steps.ts
+│   ├── login/
+│   │   ├── login-steps.ts
+│   │   ├── login-user-test-data-steps.ts
 │   │   └── forgot-password-steps.ts
-│   └── example-steps.ts        # Or at root for standalone steps
+│   ├── navigation-steps.ts     # Side nav, page navigation
+│   └── example-steps.ts
 ├── support/                    # Hooks, world, config, page objects, utilities
 │   ├── pages/                  # Page object classes (all locators and logic)
 │   │   ├── login-page.ts
-│   │   └── forgot-password-page.ts
+│   │   ├── forgot-password-page.ts
+│   │   ├── navigation-page.ts  # Side nav locators
+│   │   └── user-management/
+│   │       ├── users-page.ts       # User list page
+│   │       └── add-user-page.ts    # Add user form page
 │   ├── user-test-data.ts       # UserData class and User interface
+│   ├── dropdown-utils.ts       # Shared dropdown selection utility
 │   ├── wait-for.ts             # Retry utility for waiting on conditions
 │   ├── config.ts               # Environment/config
 │   ├── world.ts                # CustomWorld (page, context, state)
@@ -133,7 +145,7 @@ tests/cucumber/
 ├── env/
 │   ├── .env.example            # Template for env vars
 │   └── .env                    # Your local env (gitignored)
-└── cucumber-profiles.ts        # Profile definitions (smoke, regression, etc.)
+└── cucumber-profiles.ts        # Profile definitions (smoke, regression, login)
 ```
 
 **How it fits together**

@@ -1,0 +1,36 @@
+---
+description: Additional E2E best practices (Playwright, Cucumber, waits, utilities)
+globs: tests/cucumber/**/*.ts
+alwaysApply: false
+---
+
+# E2E Best Practices
+
+## Page Objects
+
+### One Page Per Screen
+When navigation goes to a different URL or a clearly distinct UI (e.g. list vs. add form), use a separate page object. Do not mix locators from different screens in one page object.
+
+✅ **GOOD** - Split by screen: `users-page.ts` (list) and `add-user-page.ts` (form)
+❌ **BAD** - Single page with locators for both list and form when they live on different views
+
+## Shared Utilities
+
+Extract repeated interaction patterns into support utilities (e.g. `dropdown-utils.ts`, `wait-for.ts`). Page objects import and use them; steps do not.
+
+✅ **GOOD** - `selectFromDropdown(dropdownLocator, option)` in `support/dropdown-utils.ts`, used by page objects
+❌ **BAD** - Duplicated dropdown click/select logic in multiple page objects
+
+## Waits
+
+Use condition-based waits instead of fixed timeouts. Wait for the actual UI state (e.g. element visible, text changed).
+
+✅ **GOOD** - `await locator.waitFor({ state: "visible" })`, or filter by `hasNotText: "Searching"` for loading states
+❌ **BAD** - `await page.waitForTimeout(2000)` or other arbitrary sleeps
+
+## Typed Data
+
+Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects rather than inline anonymous objects when the shape is reused.
+
+✅ **GOOD** - `addUser(user: User)` with `User` from `user-test-data`
+❌ **BAD** - `addUser(data: { username: string; password: string; ... })` with duplicated shape
