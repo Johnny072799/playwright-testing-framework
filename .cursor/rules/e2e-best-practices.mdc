@@ -6,6 +6,10 @@ alwaysApply: false
 
 # E2E Best Practices
 
+## Design for Testability
+
+If we consider how we will test the application before or while we develop it, testing becomes a natural extension of development rather than a burdensome afterthought. Think about selectors, flows, and data needs up front.
+
 ## Page Objects
 
 ### One Page Per Screen
@@ -14,24 +18,26 @@ When navigation goes to a different URL or a clearly distinct UI (e.g. list vs. 
 ✅ **GOOD** - Split by screen: `users-page.ts` (list) and `add-user-page.ts` (form)
 ❌ **BAD** - Single page with locators for both list and form when they live on different views
 
-### Shared Pages for Cross-App Elements
-When locators (e.g. error messages, toasts) appear across multiple pages, put them in a shared page like `common-page.ts`. Put shared assertion steps in `common-steps.ts`. Do not keep them in domain-specific pages (e.g. login-page) when they are used app-wide.
+### Base Page and Shared Locators
+All page objects extend `BasePage`, which holds shared locators (errors, toasts). Use `common-page.ts` (extends BasePage) when you need common locators without a specific page context. Put shared assertion steps in `common-steps.ts`.
 
-✅ **GOOD** - `common-page.ts` with `errorMessage()`, `fieldErrorMessage()`; `common-steps.ts` with verify steps
-❌ **BAD** - Error locators and verify steps in `login-page.ts` when add-user form also shows them
+✅ **GOOD** - `base-page.ts` with `errorMessage()`, `fieldErrorMessage()`; all pages extend it
+❌ **BAD** - Error locators duplicated in each page when they appear app-wide
 
 ## Shared Utilities
 
 Extract repeated interaction patterns into support utilities (e.g. `dropdown-utils.ts`, `wait-for.ts`). Page objects import and use them; steps do not.
 
-✅ **GOOD** - `selectFromDropdown(dropdownLocator, option)` in `support/dropdown-utils.ts`, used by page objects
-❌ **BAD** - Duplicated dropdown click/select logic in multiple page objects
+**Keep helpers framework-agnostic**: Do not pass the world object or Cucumber-specific types. Accept primitives, Locator, or domain types. This keeps support code portable.
+
+✅ **GOOD** - `selectFromDropdown(dropdownLocator, option)`, `UserData` with no page/world params
+❌ **BAD** - Helper that receives `CustomWorld` or Cucumber types; duplicated logic in page objects
 
 ## Waits
 
-Use condition-based waits instead of fixed timeouts. Wait for the actual UI state (e.g. element visible, text changed).
+Use condition-based waits instead of fixed timeouts. Wait for the actual UI state (element visible, text changed, loading finished).
 
-✅ **GOOD** - `await locator.waitFor({ state: "visible" })`, or filter by `hasNotText: "Searching"` for loading states
+✅ **GOOD** - `await locator.waitFor({ state: "visible" })`, filter by `hasNotText: "Searching"`, `waitFor` from `wait-for.ts`
 ❌ **BAD** - `await page.waitForTimeout(2000)` or other arbitrary sleeps
 
 ## Typed Data
@@ -47,8 +53,10 @@ Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects ra
 
 **Subsequent methods** (page objects, When/Then steps) should be malleable: they accept the moulded data and adapt. If a field is empty, don't fill it. Do not pass explicit "omit" flags or similar—the data itself carries the intent.
 
-✅ **GOOD** - Given clears the field; `addUser(user)` skips filling when `user.userRole` is empty
-❌ **BAD** - `addUser(user, omitFields: ["userRole"])` or passing flags to indicate what to skip
+**Verify data before When steps** - When steps should call `state.get<T>(key)` at the start. If data is missing, `WorldState.get` throws a clear error. Fail fast.
+
+✅ **GOOD** - Given clears the field; `addUser(user)` skips filling when `user.userRole` is empty; When step gets user via `state.get<User>("user")` first
+❌ **BAD** - `addUser(user, omitFields: ["userRole"])`; When step assumes data exists without calling state.get
 
 ## Empty-Field Validation Scenarios
 

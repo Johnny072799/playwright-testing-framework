@@ -68,14 +68,18 @@ Page objects should:
 - Handle waiting/retry logic
 - Import config and utilities as needed
 
-### 4. Naming Conventions
+### 4. Base Page Inheritance
+
+All page objects extend `BasePage`, which holds shared locators (errors, toasts). If a shared locator changes, update it once in `base-page.ts` rather than in multiple page classes.
+
+### 5. Naming Conventions
 
 - Page object files: `name-page.ts` (kebab-case + `-page`)
 - Page object classes: `PascalCase` (e.g., `LoginPage`)
 - Locator methods: `camelCase()` returning `Locator`
 - Action methods: `async camelCase()` returning `Promise<void>` or result type
 
-### 5. Step File Organization
+### 6. Step File Organization
 
 - **Domain folders**: Group step files by area, e.g. `steps/login/`, `steps/checkout/`
 - **Flow steps** (`{domain}-steps.ts`): Page navigation, actions, assertions for that page (e.g. "I am on the login page", "I login to the portal")

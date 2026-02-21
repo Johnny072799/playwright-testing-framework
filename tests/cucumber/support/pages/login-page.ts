@@ -1,9 +1,12 @@
 import type { Locator, Page } from "playwright";
 import { config } from "../config";
 import { waitFor, WaitForResult } from "../wait-for";
+import { BasePage } from "./base-page";
 
-export class LoginPage {
-  constructor(private readonly page: Page) {}
+export class LoginPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   usernameInput(): Locator {
     return this.page.locator("input[name='username']");

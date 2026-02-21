@@ -1,13 +1,16 @@
 import type { Locator, Page } from "playwright";
 import type { User } from "../../user-test-data";
 import { selectFromDropdown } from "../../dropdown-utils";
+import { BasePage } from "../base-page";
 
 /**
  * Page object for the Add User form (navigated to from Admin > User Management > Users).
  * Holds locators and interaction logic for adding a system user.
  */
-export class AddUserPage {
-  constructor(private readonly page: Page) {}
+export class AddUserPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   userRoleDropdown(): Locator {
     return this.page.locator(".oxd-select-wrapper").first();

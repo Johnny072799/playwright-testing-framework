@@ -1,4 +1,3 @@
-import type { Page } from "playwright";
 import { faker } from "@faker-js/faker";
 import { config } from "./config";
 
@@ -15,11 +14,10 @@ export interface User {
 }
 
 /**
- * UserData class - manages user test data. Provides methods to get User objects
- * initialized with base valid data from config (source of truth).
+ * UserData - provides User objects for test setup.
+ * Framework-agnostic: no page, world, or Cucumber dependencies.
  */
 export class UserData {
-  constructor(private readonly page: Page) {}
 
   /**
    * Get base valid user from config (source of truth).
