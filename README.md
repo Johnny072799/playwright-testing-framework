@@ -43,7 +43,7 @@ Copy the example env file into your local env:
 cp tests/cucumber/env/.env.example tests/cucumber/env/.env
 ```
 
-Edit `tests/cucumber/env/.env` and set `BASE_URL` (and any other required URLs) to the app you’re testing. For login scenarios, also set `USER_EMAIL` and `USER_PASSWORD`. See `.env.example` for the full list.
+Edit `tests/cucumber/env/.env` and set `BASE_URL` (and any other required URLs) to the app you’re testing. For login scenarios, also set `USERNAME` and `USER_PASSWORD`. See `.env.example` for the full list.
 
 ### 4. Run the tests
 
@@ -74,7 +74,7 @@ The `--` tells npm to pass the rest of the command to Cucumber. You can use any 
 
 ### Profiles
 
-Profiles are named bundles of settings (e.g. which tags to run, format, paths). Think of them as saved configurations. The project defines profiles like `smoke`, `regression`, and `my-tag` that combine the base setup with a specific tag filter.
+Profiles are named bundles of settings (e.g. which tags to run, format, paths). Think of them as saved configurations. The project defines profiles like `smoke`, `regression`, and `login` that combine the base setup with a specific tag filter.
 
 **Commands to run by profile:**
 
@@ -84,7 +84,16 @@ npm run test -- -p regression
 npm run test -- -p my-tag
 ```
 
-`-- -p smoke` passes the profile flag to the test runner, which runs only scenarios tagged `@smoke`. Profiles are defined in `tests/cucumber/cucumber-profiles.ts`; you can add more there.
+`-- -p smoke` passes the profile flag to the test runner, which runs only scenarios tagged `@smoke`. Profiles (`smoke`, `regression`, `login`) are defined in `tests/cucumber/cucumber-profiles.ts`; you can add more there.
+
+### Tag strategy
+
+- **@regression** – Add at the **Feature** level so all scenarios in that feature inherit it. Regression runs the full suite.
+- **@smoke** – Add at the **Scenario** level for happy-path tests only (valid login, add user). Smoke runs a quick sanity check.
+
+By placing `@regression` on the Feature, every scenario (including smoke ones) is included when running regression. The regression profile runs `@regression`; the smoke profile runs `@smoke`.
+
+**When adding new feature files**, add `@regression` at the Feature level so those scenarios are included in regression runs.
 
 ### When to use which
 
@@ -110,21 +119,35 @@ npm run test -- -p my-tag
 ```
 tests/cucumber/
 ├── features/                   # Gherkin feature files (.feature)
-│   ├── login/                  # Domain folder: features grouped by area
+│   ├── admin/                  # Domain: admin features
+│   │   └── user-management/
+│   │       └── users.feature
+│   ├── login/                  # Domain: login features
 │   │   ├── login.feature
 │   │   └── forgot-password.feature
-│   └── example.feature         # Or at root for standalone features
+│   └── example.feature         # Standalone features
 ├── steps/                      # Step definitions (Given, When, Then)
-│   ├── login/                  # Domain folder: steps grouped by area
-│   │   ├── login-steps.ts              # Page/flow steps (being on page, login actions)
-│   │   ├── login-user-test-data-steps.ts  # User test data setup
+│   ├── admin/
+│   │   └── user-management/
+│   │       └── users-steps.ts
+│   ├── common-steps.ts         # Shared steps (e.g. error message assertions)
+│   ├── login/
+│   │   ├── login-steps.ts
+│   │   ├── login-user-test-data-steps.ts
 │   │   └── forgot-password-steps.ts
-│   └── example-steps.ts        # Or at root for standalone steps
+│   ├── navigation-steps.ts     # Side nav, page navigation
+│   └── example-steps.ts
 ├── support/                    # Hooks, world, config, page objects, utilities
 │   ├── pages/                  # Page object classes (all locators and logic)
+│   │   ├── common-page.ts      # Shared locators (errors, toasts) used across pages
 │   │   ├── login-page.ts
-│   │   └── forgot-password-page.ts
+│   │   ├── forgot-password-page.ts
+│   │   ├── navigation-page.ts  # Side nav locators
+│   │   └── user-management/
+│   │       ├── users-page.ts       # User list page
+│   │       └── add-user-page.ts    # Add user form page
 │   ├── user-test-data.ts       # UserData class and User interface
+│   ├── dropdown-utils.ts       # Shared dropdown selection utility
 │   ├── wait-for.ts             # Retry utility for waiting on conditions
 │   ├── config.ts               # Environment/config
 │   ├── world.ts                # CustomWorld (page, context, state)
@@ -133,16 +156,17 @@ tests/cucumber/
 ├── env/
 │   ├── .env.example            # Template for env vars
 │   └── .env                    # Your local env (gitignored)
-└── cucumber-profiles.ts        # Profile definitions (smoke, regression, etc.)
+└── cucumber-profiles.ts        # Profile definitions (smoke, regression, login)
 ```
 
 **How it fits together**
 
 1. **Features** describe behavior in Gherkin (Given/When/Then). Group by domain in subfolders (e.g. `features/login/`).
-2. **Steps** are thin: they create page objects and call methods; no locators or config logic. Group by domain in subfolders (e.g. `steps/login/`).
-3. **Page objects** hold all locators, interaction logic, and assertions. They may import config and utilities (e.g. `wait-for.ts`) for retry logic.
-4. **World** gives each scenario a fresh `page`, `context`, and `state`. Use `state.get<T>(key)` and `state.set(key, value)` to share data between steps.
-5. **Hooks** start/stop the browser and capture screenshots on failure.
+2. **Steps** are thin: they create page objects and call methods; no locators or config logic. Group by domain in subfolders (e.g. `steps/login/`). Put shared steps (e.g. error assertions used across features) in `steps/common-steps.ts`.
+3. **Given steps mould the world**—they set up state (e.g. user data). Invalid or missing data is created here (clear the field). Subsequent methods should adapt to whatever data they receive; if a field is empty, they don't fill it. For **empty-field validation** scenarios (e.g. required-field error messages), use individual, explicit Given steps—one per test case—as in `login-user-test-data-steps.ts`. No factory functions or mapping objects.
+4. **Page objects** hold all locators, interaction logic, and assertions. Use `common-page.ts` for locators shared across pages (e.g. Oxd error messages). They may import config and utilities (e.g. `wait-for.ts`) for retry logic.
+5. **World** gives each scenario a fresh `page`, `context`, and `state`. Use `state.get<T>(key)` and `state.set(key, value)` to share data between steps.
+6. **Hooks** start/stop the browser and capture screenshots on failure.
 
 Steps stay thin; all locators and logic live in page objects. New step files in `steps/` (including subfolders) are picked up automatically via a glob.
 
@@ -180,7 +204,7 @@ Steps stay thin; all locators and logic live in page objects. New step files in 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `BASE_URL` | Yes | Base URL of the app under test |
-| `USER_EMAIL` | No† | Test user email (required for login scenarios) |
+| `USERNAME` | No† | Test user username (required for login scenarios) |
 | `USER_PASSWORD` | No† | Test user password (required for login scenarios) |
 | `HEADLESS` | No | `true` = headless, `false` = visible browser (default: `true`) |
 | `START_MAXIMIZED` | No | `true` = maximize window when headed (default: `false`) |

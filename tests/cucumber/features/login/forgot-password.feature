@@ -1,4 +1,5 @@
 @login
+@regression
 
 Feature: OrangeHRM Forgot Password
 

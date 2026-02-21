@@ -1,10 +1,10 @@
-@smoke
-@regression
 @login
+@regression
 
 Feature: OrangeHRM Portal Login
 
 @valid-credentials
+@smoke
   Scenario: Validate login to the OrangeHRM portal with valid credentials
     Given I am a valid user
     Then I login to the OrangeHRM portal
