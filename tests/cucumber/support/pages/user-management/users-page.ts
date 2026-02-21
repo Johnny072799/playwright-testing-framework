@@ -1,11 +1,14 @@
 import type { Locator, Page } from "playwright";
+import { BasePage } from "../base-page";
 
 /**
  * Page object for Admin > User Management > Users (user list).
  * Holds locators for the user list page. The add user form is on a separate page.
  */
-export class UsersPage {
-  constructor(private readonly page: Page) {}
+export class UsersPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   addButton(): Locator {
     return this.page.locator("button").filter({ hasText: "Add" });

@@ -1,19 +1,13 @@
-import type { Locator, Page } from "playwright";
+import { BasePage } from "./base-page";
+import type { Page } from "playwright";
 
 /**
- * Shared locators for Oxd components used across multiple pages.
- * Use when elements (e.g. error messages, toasts) appear app-wide.
+ * Shared page for cross-app elements. Extends BasePage.
+ * Use when you need common locators (errors, toasts) without a specific page context.
+ * For page objects, extend BasePage directly.
  */
-export class CommonPage {
-  constructor(private readonly page: Page) {}
-
-  /** General alert/toast error message. */
-  errorMessage(): Locator {
-    return this.page.locator(".oxd-alert-content-text");
-  }
-
-  /** Field-level validation message (e.g. for blank required fields). */
-  fieldErrorMessage(): Locator {
-    return this.page.locator(".oxd-input-field-error-message");
+export class CommonPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
   }
 }

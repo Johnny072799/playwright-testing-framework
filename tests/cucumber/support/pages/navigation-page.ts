@@ -1,7 +1,10 @@
 import type { Locator, Page } from "playwright";
+import { BasePage } from "./base-page";
 
-export class NavigationPage {
-  constructor(private readonly page: Page) {}
+export class NavigationPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
 
   adminMenuItem(): Locator {
     return this.page
