@@ -72,3 +72,15 @@ Edit `tests/cucumber/env/.env` and set `BASE_URL` (and `USERNAME`/`USER_PASSWORD
 "terminal.integrated.shellArgs.osx": ["-l"]
 ```
 This forces a login shell so `.zshrc` is sourced.
+
+---
+
+## Anti-patterns and fixes
+
+| Anti-pattern                      | Problem                          | Solution                                        |
+|-----------------------------------|----------------------------------|-------------------------------------------------|
+| Functions in step files           | Violates separation of concerns  | Move to page objects or support utilities       |
+| Passing World to support classes  | Creates framework dependency     | Pass only needed data as parameters             |
+| Hardcoded waits / `waitForTimeout`| Flaky tests, slow execution      | Use condition-based waits (`locator.waitFor`)   |
+| Locators in step definitions      | Brittle, duplicated selectors    | Put all locators in page objects                |
+| Business logic in steps           | Hard to maintain, reuse          | Put logic in page objects or support            |

@@ -68,6 +68,12 @@ Steps: create page objects, call methods, use world state, assert.
 
 Page objects: hold locators, contain interaction logic, handle waits, import config/utilities as needed.
 
+### Step DON'Ts
+
+- Include business logic or helper functions—move to page objects or support
+- Perform complex data transformations—keep steps thin
+- Pass the world object to support classes—pass only needed data as parameters
+
 ---
 
 ## One page per screen
@@ -91,6 +97,8 @@ Extract repeated interaction patterns into support utilities (e.g. `dropdown-uti
 
 **Keep helpers framework-agnostic**: avoid passing the world object or Cucumber-specific types. Accept primitives, `Locator`, or domain types. This keeps support code portable and reusable across framework changes.
 
+Use static methods when a utility has no instance state. Add JSDoc for complex or non-obvious methods.
+
 ---
 
 ## Waits
@@ -105,6 +113,11 @@ Extract repeated interaction patterns into support utilities (e.g. `dropdown-uti
 ## Typed data
 
 Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects rather than inline anonymous objects.
+
+## Data management
+
+- Use data generators (e.g. faker) or config for test data rather than hardcoding in steps
+- Clean up test data after execution when tests create records that could affect other runs
 
 ---
 
@@ -136,3 +149,30 @@ When validating required-field error messages, use **individual, explicit Given 
 - **Flow steps** (`{domain}-steps.ts`) – Page navigation, actions, assertions.
 - **User test data steps** (`{domain}-user-test-data-steps.ts`) – Set up user credentials in state.
 - **Feature-specific steps** (`{feature}-steps.ts`) – Steps for a specific feature within a domain.
+
+---
+
+## Framework independence
+
+Maintain the ability to migrate frameworks by keeping core logic free of framework-specific dependencies.
+
+**Signs your code is migration-ready:**
+- Support utilities can be used in any TypeScript project
+- Page objects depend only on the driver interface (e.g. Playwright `Page`/`Locator`)
+- No Cucumber-specific code outside of step definitions
+- World object is not passed to support classes
+
+---
+
+## Code review checklist
+
+Before merging, verify:
+
+- [ ] Step definitions contain only orchestration logic
+- [ ] All page interactions are in page objects
+- [ ] Support classes do not reference the world object
+- [ ] Methods have single responsibilities
+- [ ] Locators are maintained in page classes
+- [ ] No framework-specific code in support utilities
+- [ ] Error messages are meaningful
+- [ ] Code follows naming conventions (see PROJECT_STRUCTURE)

@@ -28,10 +28,16 @@ All page objects extend `BasePage`, which holds shared locators (errors, toasts)
 
 Extract repeated interaction patterns into support utilities (e.g. `dropdown-utils.ts`, `wait-for.ts`). Page objects import and use them; steps do not.
 
-**Keep helpers framework-agnostic**: Do not pass the world object or Cucumber-specific types. Accept primitives, Locator, or domain types. This keeps support code portable.
+**Keep helpers framework-agnostic**: Do not pass the world object or Cucumber-specific types. Accept primitives, Locator, or domain types. This keeps support code portable. Use static methods when a utility has no instance state.
 
 ✅ **GOOD** - `selectFromDropdown(dropdownLocator, option)`, `UserData` with no page/world params
 ❌ **BAD** - Helper that receives `CustomWorld` or Cucumber types; duplicated logic in page objects
+
+## Step DON'Ts
+
+- Do not include business logic or helper functions in steps—move to page objects or support
+- Do not perform complex data transformations—keep steps thin
+- Do not pass the world object to support classes—pass only needed data as parameters
 
 ## Waits
 

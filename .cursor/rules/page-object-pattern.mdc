@@ -62,6 +62,11 @@ Steps should:
 - Use world state for data sharing
 - Perform assertions on results
 
+Steps should NOT:
+- Include business logic or helper functions
+- Perform complex data transformations
+- Pass the world object to support classes
+
 Page objects should:
 - Hold all locators
 - Contain interaction logic (fill, click, etc.)
