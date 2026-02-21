@@ -8,6 +8,7 @@ import { config } from "./config";
 export interface User {
   username?: string;
   password?: string;
+  confirmPassword?: string;
   userRole?: string;
   employeeName?: string;
   status?: string;
@@ -40,6 +41,7 @@ export class UserData {
     return {
       username: faker.internet.username(),
       password: config.testUserPassword,
+      confirmPassword: config.testUserPassword,
       userRole: "ESS",
       employeeName: faker.person.fullName(),
       status: "Enabled"

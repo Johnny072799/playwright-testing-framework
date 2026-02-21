@@ -1,5 +1,3 @@
-@smoke
-
 Feature: Example homepage
 
 @my-tag

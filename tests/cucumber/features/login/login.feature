@@ -1,5 +1,5 @@
-@regression
 @login
+@regression
 
 Feature: OrangeHRM Portal Login
 

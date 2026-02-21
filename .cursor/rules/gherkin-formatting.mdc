@@ -1,0 +1,41 @@
+---
+description: Gherkin/feature file formatting conventions
+globs: tests/cucumber/features/**/*.feature
+alwaysApply: false
+---
+
+# Gherkin Formatting Rules
+
+## Cucumber Data Tables
+
+**Vertically align all `|` pipe characters** in Examples and Data Tables so columns line up.
+
+✅ **GOOD** - Aligned columns:
+```gherkin
+  Examples:
+    | Field            | Error Message |
+    | First Name       | "Required"    |
+    | Last Name        | "Required"    |
+    | Employee Name    | "Required"    |
+    | Username         | "Required"    |
+```
+
+❌ **BAD** - Misaligned:
+```gherkin
+  Examples:
+    | Field | Error Message |
+    | First Name | "Required" |
+    | Last Name | "Required" |
+```
+
+Pad cell content with spaces so that each column's right edge (before the next `|`) aligns across all rows.
+
+## Tags on New Features
+
+When adding a new feature file, add `@regression` at the Feature level so its scenarios are included in regression runs.
+
+```gherkin
+@regression
+@your-area
+Feature: Your Feature Name
+```

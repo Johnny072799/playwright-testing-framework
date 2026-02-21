@@ -14,6 +14,12 @@ When navigation goes to a different URL or a clearly distinct UI (e.g. list vs. 
 ✅ **GOOD** - Split by screen: `users-page.ts` (list) and `add-user-page.ts` (form)
 ❌ **BAD** - Single page with locators for both list and form when they live on different views
 
+### Shared Pages for Cross-App Elements
+When locators (e.g. error messages, toasts) appear across multiple pages, put them in a shared page like `common-page.ts`. Put shared assertion steps in `common-steps.ts`. Do not keep them in domain-specific pages (e.g. login-page) when they are used app-wide.
+
+✅ **GOOD** - `common-page.ts` with `errorMessage()`, `fieldErrorMessage()`; `common-steps.ts` with verify steps
+❌ **BAD** - Error locators and verify steps in `login-page.ts` when add-user form also shows them
+
 ## Shared Utilities
 
 Extract repeated interaction patterns into support utilities (e.g. `dropdown-utils.ts`, `wait-for.ts`). Page objects import and use them; steps do not.
@@ -34,3 +40,19 @@ Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects ra
 
 ✅ **GOOD** - `addUser(user: User)` with `User` from `user-test-data`
 ❌ **BAD** - `addUser(data: { username: string; password: string; ... })` with duplicated shape
+
+## Given Steps Mould the World
+
+**Given** steps set up the scenario state (the "world"). Invalid or missing data belongs in the Given step—clear or modify the data there (e.g. `essUser.userRole = ""`).
+
+**Subsequent methods** (page objects, When/Then steps) should be malleable: they accept the moulded data and adapt. If a field is empty, don't fill it. Do not pass explicit "omit" flags or similar—the data itself carries the intent.
+
+✅ **GOOD** - Given clears the field; `addUser(user)` skips filling when `user.userRole` is empty
+❌ **BAD** - `addUser(user, omitFields: ["userRole"])` or passing flags to indicate what to skip
+
+## Empty-Field Validation Scenarios
+
+When validating required-field error messages, use **individual, explicit Given steps**—one per test case. Create user, set state, then mutate the field (e.g. `user.username = ""`). Match the pattern in `login-user-test-data-steps.ts`.
+
+✅ **GOOD** - Each Given is a plain async function; no factory or mapping
+❌ **BAD** - Factory function or mapping object to generate steps

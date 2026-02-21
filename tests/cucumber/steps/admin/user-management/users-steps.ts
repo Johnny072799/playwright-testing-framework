@@ -11,9 +11,52 @@ Given("An ESS user is added to the system", async function (this: CustomWorld) {
   this.state.set("essUser", essUser);
 });
 
+Given("I do not complete the user role", async function (this: CustomWorld) {
+  const userData = new UserData(this.page);
+  const essUser = userData.essUser();
+  this.state.set("essUser", essUser);
+  essUser.userRole = "";
+});
+
+Given("I do not complete the employee name", async function (this: CustomWorld) {
+  const userData = new UserData(this.page);
+  const essUser = userData.essUser();
+  this.state.set("essUser", essUser);
+  essUser.employeeName = "";
+});
+
+Given("I do not complete the status", async function (this: CustomWorld) {
+  const userData = new UserData(this.page);
+  const essUser = userData.essUser();
+  this.state.set("essUser", essUser);
+  essUser.status = "";
+});
+
+Given("I do not complete the username", async function (this: CustomWorld) {
+  const userData = new UserData(this.page);
+  const essUser = userData.essUser();
+  this.state.set("essUser", essUser);
+  essUser.username = "";
+});
+
+Given("I do not complete the password", async function (this: CustomWorld) {
+  const userData = new UserData(this.page);
+  const essUser = userData.essUser();
+  this.state.set("essUser", essUser);
+  essUser.password = "";
+});
+
+Given("I do not complete the confirm password", async function (this: CustomWorld) {
+  const userData = new UserData(this.page);
+  const essUser = userData.essUser();
+  this.state.set("essUser", essUser);
+  essUser.confirmPassword = "";
+});
+
 Then("I get a valid username for the ESS user", async function (this: CustomWorld) {
   const usersPage = new UsersPage(this.page);
   const essUser = this.state.get<User>("essUser");
+  if (essUser.employeeName === "") return; // Preserve cleared field from Given
   const employeeName = await usersPage
     .employeeNameCellSecondRow()
     .innerText()

@@ -50,24 +50,39 @@ export class AddUserPage {
     return this.page.locator(".oxd-toast-container");
   }
 
-  /** Fill and submit the add user form. */
+  /** Fill and submit the add user form. Only fills fields that have values. */
   async addUser(user: User): Promise<void> {
-    await selectFromDropdown(this.userRoleDropdown(), user.userRole ?? "ESS");
+    if (user.userRole) {
+      await selectFromDropdown(this.userRoleDropdown(), user.userRole);
+    }
 
-    await this.employeeNameInput().pressSequentially(user.employeeName ?? "", { delay: 100 });
-    const firstOption = this.page
-      .getByRole("option")
-      .filter({ hasNotText: "Searching" })
-      .first();
-    await firstOption.waitFor({ state: "visible" });
-    await firstOption.click();
+    if (user.employeeName) {
+      await this.employeeNameInput().pressSequentially(user.employeeName, { delay: 100 });
+      const firstOption = this.page
+        .getByRole("option")
+        .filter({ hasNotText: "Searching" })
+        .first();
+      await firstOption.waitFor({ state: "visible" });
+      await firstOption.click();
+    }
 
-    await this.usernameInput().fill(user.username ?? "");
-    await selectFromDropdown(this.statusDropdown(), user.status ?? "Enabled");
+    if (user.username) {
+      await this.usernameInput().fill(user.username);
+    }
 
-    const password = user.password ?? "";
-    await this.passwordInput().fill(password);
-    await this.confirmPasswordInput().fill(password);
+    if (user.status) {
+      await selectFromDropdown(this.statusDropdown(), user.status);
+    }
+
+    if (user.password) {
+      await this.passwordInput().fill(user.password);
+    }
+
+    const confirmValue = user.confirmPassword !== undefined ? user.confirmPassword : user.password;
+    if (confirmValue) {
+      await this.confirmPasswordInput().fill(confirmValue);
+    }
+
     await this.saveButton().click();
   }
 }
