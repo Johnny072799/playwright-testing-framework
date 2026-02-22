@@ -2,47 +2,39 @@
 
 [← README](../README.md) · [Index](INDEX.md)
 
-This repo does not include CI config by default. Below is a recommended approach.
+This repo includes GitHub Actions workflows for smoke (on PRs) and nightly regression. For the full strategy—personal vs. company, handoff, tuning—see [CI_STRATEGY.md](CI_STRATEGY.md).
 
-## Recommended setup
+## Included workflows
 
-### Smoke on every PR/commit
+| Workflow | File | Trigger |
+|----------|------|---------|
+| **Smoke** | `.github/workflows/smoke-on-pr.yml` | Every PR and push to main/master |
+| **Regression (nightly)** | `.github/workflows/regression-nightly.yml` | 6:00 UTC daily + manual run |
 
-Run smoke tests for fast feedback:
+## One-time setup
+
+1. Add repo secrets: **Settings → Secrets and variables → Actions**
+   - `BASE_URL` – app under test
+   - `TEST_USERNAME` – test user (for login scenarios)
+   - `TEST_PASSWORD` – test password
+2. Push a PR → smoke runs. Nightly regression runs on schedule (or trigger manually from the Actions tab).
+
+## Commands (for reference)
 
 ```bash
-npm run test -- -p smoke
+npm run test -- -p smoke      # Smoke profile
+npm run test -- -p regression # Full regression
 ```
 
-### Full regression before merge or nightly
+## Environment variables in CI
 
-Run the full suite:
-
-```bash
-npm run test -- -p regression
-```
-
-### Environment variables in CI
-
-Set these in your CI pipeline (do not commit secrets):
+Set in the workflow (or as repo vars). Do not commit secrets.
 
 - `BASE_URL` – required
 - `USERNAME`, `USER_PASSWORD` – required for login scenarios
 - `HEADLESS=true` – typically for CI
-- `PARALLEL` – e.g. `2` or `4` for faster runs (tune based on runners)
+- `PARALLEL` – e.g. `2` or `4` for faster runs
 
-### Artifacts
+## Artifacts
 
-Configure CI to retain `artifacts/` on failure so you can download screenshots and traces. See [ARTIFACTS_AND_REPORTING.md](ARTIFACTS_AND_REPORTING.md).
-
-### Example (GitHub Actions)
-
-```yaml
-- name: Run smoke tests
-  run: npm run test -- -p smoke
-  env:
-    BASE_URL: ${{ secrets.BASE_URL }}
-    USERNAME: ${{ secrets.TEST_USERNAME }}
-    USER_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-    HEADLESS: true
-```
+On failure, workflows upload `artifacts/screenshots/` and `artifacts/traces/` so you can download and inspect. See [ARTIFACTS_AND_REPORTING.md](ARTIFACTS_AND_REPORTING.md).

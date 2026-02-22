@@ -15,4 +15,5 @@
 | [ARTIFACTS_AND_REPORTING.md](ARTIFACTS_AND_REPORTING.md) | Screenshots, traces, debugging |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md)        | Common errors and fixes              |
 | [CONTRIBUTING.md](CONTRIBUTING.md)              | Rules for adding features and steps  |
-| [CI.md](CI.md)                                  | Recommended CI approach              |
+| [CI.md](CI.md)                                  | CI setup, workflows, secrets         |
+| [CI_STRATEGY.md](CI_STRATEGY.md)                | Regression & smoke strategy, personal vs. company |
