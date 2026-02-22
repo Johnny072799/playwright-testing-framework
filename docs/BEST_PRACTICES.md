@@ -121,9 +121,38 @@ Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects ra
 
 ---
 
+## Given, When, Then
+
+- **Given** – Set up preconditions and state. Invalid or missing data belongs here—clear or modify the data (e.g. `essUser.userRole = ""`).
+- **When** – Perform the action under test (e.g. click, submit, navigate). Use page object methods. Verify required data is in the world before calling.
+- **Then** – Verify the outcome. Perform immediate UI checks (e.g. element visible, text correct, error message shown).
+
+### When (actions)
+
+- Use methods from page object classes to interact with elements.
+- Verify any data needed from the world is present before calling (e.g. `state.get<T>(key)` at the start)—avoids null/undefined and fails fast.
+
+### Then (verification)
+
+- Confirm the expected state in the UI (e.g. text field contains entered value, error message appears).
+- Assert on locators returned by page objects; keep assertions in the step.
+
+### And
+
+Use **And** when chaining multiple steps of the same type. Do not repeat Given/When/Then for each—use And for the second and subsequent ones.
+
+✅ **GOOD** – `Given A` `And B` `When C` `Then D`  
+❌ **BAD** – `Given A` `Given B` `When C` `Then D` (redundant keywords)
+
+### Step definitions
+
+Declare each step once, using the keyword that matches its role in the feature: Given for setup, When for actions, Then for verification. Do not register the same step for multiple keywords.
+
+---
+
 ## Given steps mould the world
 
-**Given** steps set up state. Invalid or missing data belongs there—clear or modify the data (e.g. `userToAdd.userRole = ""`).
+**Given** steps set up state. Invalid or missing data belongs there—clear or modify the data (e.g. `essUser.userRole = ""`).
 
 **Subsequent methods** should adapt: if a field is empty, don't fill it. Do not pass explicit "omit" flags; the data itself carries the intent.
 

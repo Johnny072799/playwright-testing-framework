@@ -7,12 +7,13 @@ Feature: OrangeHRM Portal Login
 @smoke
   Scenario: Validate login to the OrangeHRM portal with valid credentials
     Given I am a valid user
-    Then I login to the OrangeHRM portal
+    When I login to the OrangeHRM portal
+    Then I see the brand banner
 
 @invalid-credentials
   Scenario Outline: Validate login to the OrangeHRM portal with invalid credentials: <TEST USER>
-    Given <TEST USER> 
-    And I attempt to login to the OrangeHRM portal
+    Given <TEST USER>
+    When I attempt to login to the OrangeHRM portal
     Then I verify I see the error message: <ERROR MESSAGE>
 
     Examples:
@@ -23,7 +24,7 @@ Feature: OrangeHRM Portal Login
 @blank-required-fields
   Scenario Outline: Validate login to the OrangeHRM portal with blank required fields: <TEST USER>
     Given <TEST USER>
-    And I attempt to login to the OrangeHRM portal
+    When I attempt to login to the OrangeHRM portal
     Then I verify I see the field error message: <FIELD ERROR MESSAGE>
 
     Examples:

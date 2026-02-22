@@ -12,14 +12,14 @@ Scenario: I can add an ESS user to the system
   Given An ESS user is added to the system
   And I navigate to the admin side navigation item
   And I get a valid username for the ESS user
-  And I add an ESS user
+  When I add an ESS user
   Then I verify I see the ESS user added successfully
 
 Scenario Outline: I cannot add a user without completing all required fields
   Given <TEST CASE>
   And I navigate to the admin side navigation item
   And I get a valid username for the ESS user
-  And I add an ESS user
+  When I add an ESS user
   Then I verify I see the field error message: <ERROR MESSAGE>
 
   Examples:

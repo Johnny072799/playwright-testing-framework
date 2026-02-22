@@ -14,6 +14,10 @@
 
 5. **Gherkin tables** – Vertically align `|` pipes in Examples. See `.cursor/rules/gherkin-formatting.mdc`.
 
+## Before merging
+
+Ask: *"Review the newly added tests"* to get an automated review against [CODE_REVIEW.md](CODE_REVIEW.md). Fix any violations before merging.
+
 ## Project principles
 
 - Prioritize **maintainability** and **clarity** over cleverness or brevity.

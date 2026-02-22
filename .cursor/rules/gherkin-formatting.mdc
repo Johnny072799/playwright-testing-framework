@@ -6,6 +6,16 @@ alwaysApply: false
 
 # Gherkin Formatting Rules
 
+## Given, When, Then
+
+- **Given** – Preconditions and state
+- **When** – The action under test (use page objects; verify world data before calling)
+- **Then** – Verification and assertions (immediate UI checks)
+
+**And** – Use when chaining steps of the same type. Use `And` for the second and subsequent steps instead of repeating Given/When/Then.
+
+**Step definitions** – Declare each step once. Use Given for setup, When for actions, Then for verification—matching the keyword used in the feature.
+
 ## Cucumber Data Tables
 
 **Vertically align all `|` pipe characters** in Examples and Data Tables so columns line up.

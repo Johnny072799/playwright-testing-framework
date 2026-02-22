@@ -1,8 +1,8 @@
-import { Given, Then } from "@cucumber/cucumber";
+import { When, Then } from "@cucumber/cucumber";
 import { CustomWorld } from "../support/world";
 import { ExamplePage } from "../support/pages/example-page";
 
-Given("I open the homepage", async function (this: CustomWorld) {
+When("I open the homepage", async function (this: CustomWorld) {
   const examplePage = new ExamplePage(this.page);
   await examplePage.openHomePage();
 });
