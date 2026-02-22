@@ -5,7 +5,7 @@ Feature: OrangeHRM User Management
 
 Background:
   Given I am a valid user
-  And I login to the OrangeHRM portal
+  And I attempt to login to the OrangeHRM portal
 
 @smoke
 Scenario: I can add an ESS user to the system

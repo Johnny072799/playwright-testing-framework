@@ -7,7 +7,7 @@ Feature: OrangeHRM Portal Login
 @smoke
   Scenario: Validate login to the OrangeHRM portal with valid credentials
     Given I am a valid user
-    When I login to the OrangeHRM portal
+    When I attempt to login to the OrangeHRM portal
     Then I see the brand banner
 
 @invalid-credentials

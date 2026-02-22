@@ -8,7 +8,7 @@ Given("I am on the OrangeHRM login page", async function (this: CustomWorld) {
   await loginPage.openLoginPage();
 });
 
-When(/^I (attempt to login|login) to the OrangeHRM portal$/, async function (this: CustomWorld) {
+When(/^I attempt to login to the OrangeHRM portal$/, async function (this: CustomWorld) {
   const loginPage = new LoginPage(this.page);
   const user = this.state.get<User>("user");
   await loginPage.loginToOrangeHRMPortal(user?.username ?? "", user?.password ?? "");
