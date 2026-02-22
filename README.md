@@ -97,9 +97,9 @@ Follow the patterns in [docs/BEST_PRACTICES.md](docs/BEST_PRACTICES.md): thin st
 
 ## CI
 
-No CI config is included. Recommended: run `npm run test -- -p smoke` on every PR; run `npm run test -- -p regression` before merge or nightly.
+GitHub Actions workflows run smoke tests on every PR and full regression nightly.
 
-→ Recommended approach: [docs/CI.md](docs/CI.md)
+→ Setup: [docs/CI.md](docs/CI.md) · Strategy: [docs/CI_STRATEGY.md](docs/CI_STRATEGY.md)
 
 ---
 

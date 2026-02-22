@@ -1,0 +1,47 @@
+# Smoke tests on pull requests only. Must pass before merge.
+# Configure in branch protection: require "Smoke" check.
+#
+# Setup: Add repo secrets: BASE_URL, TEST_USERNAME, TEST_PASSWORD
+
+name: Smoke
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npm run test -- -p smoke
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          USERNAME: ${{ secrets.TEST_USERNAME }}
+          USER_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+          HEADLESS: "true"
+          PARALLEL: "2"
+
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-artifacts
+          path: |
+            artifacts/screenshots/
+            artifacts/traces/
+          if-no-files-found: ignore
