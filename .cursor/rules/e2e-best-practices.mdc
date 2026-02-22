@@ -10,6 +10,14 @@ alwaysApply: false
 
 If we consider how we will test the application before or while we develop it, testing becomes a natural extension of development rather than a burdensome afterthought. Think about selectors, flows, and data needs up front.
 
+## Given, When, Then, And
+
+- **Given** – Preconditions and state
+- **When** – Action under test (use page objects; verify world data before calling)
+- **Then** – Verification (immediate UI checks)
+- **And** – Chain steps of the same type; use And instead of repeating Given/When/Then
+- **Step definitions** – Declare each step once; use Given/When/Then to match the keyword in the feature
+
 ## Page Objects
 
 ### One Page Per Screen

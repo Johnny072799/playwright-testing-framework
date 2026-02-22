@@ -29,7 +29,7 @@ const baseProfile: CucumberProfile = {
   ],
   requireModule: ["ts-node/register/transpile-only"],
   publishQuiet: true,
-  format: ["progress"],
+  format: ["pretty"],
   parallel: config.parallel,
   worldParameters: {}
 };
