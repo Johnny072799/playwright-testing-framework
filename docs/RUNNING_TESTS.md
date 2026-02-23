@@ -39,7 +39,7 @@ By placing `@regression` on the Feature, every scenario (including smoke ones) i
 
 ### When to use which
 
-- Use **tags** when you want to filter on the fly: `npm run test -- -t "@wip"`.
+- Use **tags** when you want to filter on the fly: `npm run test -- -t @wip`.
 - Use **profiles** when you want a named config for you or CI: `npm run test -- -p smoke` (no `@` in the profile name).
 
 ---
@@ -71,10 +71,10 @@ npm run test -- -t @login
 npm run test -- -t "@my-specific-scenario"
 ```
 
-Or pass a feature path (Cucumber supports this; profiles may need path overrides):
+Or pass a feature path (replace `<domain>` and `<feature>` with your paths):
 
 ```bash
-npx cucumber-js tests/cucumber/features/login/login.feature
+npx cucumber-js tests/cucumber/features/<domain>/<feature>.feature
 ```
 
 ---

@@ -15,7 +15,7 @@ Use this checklist when reviewing test-related changes. For each item, verify co
 | 1.3 | Data tables: `\|` pipes vertically aligned | |
 | 1.4 | New feature files have `@regression` at Feature level | |
 | 1.5 | Feature files: `name.feature` (lowercase, kebab-case) | |
-| 1.6 | Grouped by domain in subfolders (e.g. `features/login/`) | |
+| 1.6 | Grouped by domain in subfolders (e.g. `features/auth/`, `features/checkout/`) | |
 
 ---
 
@@ -30,7 +30,7 @@ Use this checklist when reviewing test-related changes. For each item, verify co
 | 2.5 | Steps call page object methods, use world state, perform assertions | |
 | 2.6 | When steps call `state.get<T>(key)` at start when data needed | |
 | 2.7 | Step files: `name-steps.ts` or `{domain}-user-test-data-steps.ts` | |
-| 2.8 | Grouped by domain (e.g. `steps/login/`, `steps/admin/`) | |
+| 2.8 | Grouped by domain (e.g. `steps/auth/`, `steps/checkout/`) | |
 | 2.9 | Empty-field validation: individual explicit Given steps (no factory/mapping) | |
 
 ---

@@ -23,11 +23,11 @@ alwaysApply: false
 ✅ **GOOD** - Aligned columns:
 ```gherkin
   Examples:
-    | Field            | Error Message |
-    | First Name       | "Required"    |
-    | Last Name        | "Required"    |
-    | Employee Name    | "Required"    |
-    | Username         | "Required"    |
+    | Field       | Error Message |
+    | First Name  | "Required"    |
+    | Last Name   | "Required"    |
+    | Email       | "Required"    |
+    | Username    | "Required"    |
 ```
 
 ❌ **BAD** - Misaligned:
