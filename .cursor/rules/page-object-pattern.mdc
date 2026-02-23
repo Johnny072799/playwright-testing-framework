@@ -19,22 +19,22 @@ alwaysApply: false
 ❌ **BAD** - Locator in step definition:
 ```typescript
 Then("I should see the error message", async function (this: CustomWorld) {
-  const errorLocator = this.page.locator(".oxd-alert-content-text");
+  const errorLocator = this.page.locator("[data-testid='error-message']");
   const errorText = await errorLocator.textContent();
 });
 ```
 
 ✅ **GOOD** - Locator in page object:
 ```typescript
-// In login-page.ts
+// In sign-in-page.ts (or your domain page)
 errorMessage(): Locator {
-  return this.page.locator(".oxd-alert-content-text");
+  return this.page.locator("[data-testid='error-message']");
 }
 
-// In login-steps.ts
+// In auth-steps.ts (or your domain steps)
 Then("I should see the error message", async function (this: CustomWorld) {
-  const loginPage = new LoginPage(this.page);
-  const errorText = await loginPage.errorMessage().textContent();
+  const signInPage = new SignInPage(this.page);
+  const errorText = await signInPage.errorMessage().textContent();
 });
 ```
 
@@ -43,14 +43,14 @@ Then("I should see the error message", async function (this: CustomWorld) {
 ❌ **BAD** - Direct action in locator method:
 ```typescript
 errorMessage(): Promise<string | null> {
-  return this.page.locator(".oxd-alert-content-text").textContent();
+  return this.page.locator("[data-testid='error-message']").textContent();
 }
 ```
 
 ✅ **GOOD** - Return Locator, call action in step or page method:
 ```typescript
 errorMessage(): Locator {
-  return this.page.locator(".oxd-alert-content-text");
+  return this.page.locator("[data-testid='error-message']");
 }
 ```
 
@@ -86,7 +86,7 @@ All page objects extend `BasePage`, which holds shared locators (errors, toasts)
 
 ### 6. Step File Organization
 
-- **Domain folders**: Group step files by area, e.g. `steps/login/`, `steps/checkout/`
+- **Domain folders**: Group step files by area, e.g. `steps/auth/`, `steps/checkout/`
 - **Flow steps** (`{domain}-steps.ts`): Page navigation, actions, assertions for that page (e.g. "I am on the login page", "I login to the portal")
 - **User test data steps** (`{domain}-user-test-data-steps.ts`): Steps that set up user credentials in world state (e.g. "I am a valid user", "I do not have a valid username")
-- **Feature-specific steps** (`{feature}-steps.ts`): Steps for a specific feature within a domain (e.g. `forgot-password-steps.ts`)
+- **Feature-specific steps** (`{feature}-steps.ts`): Steps for a specific feature within a domain (e.g. `password-reset-steps.ts`)

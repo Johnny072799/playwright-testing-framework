@@ -23,7 +23,7 @@ If we consider how we will test the application before or while we develop it, t
 ### One Page Per Screen
 When navigation goes to a different URL or a clearly distinct UI (e.g. list vs. add form), use a separate page object. Do not mix locators from different screens in one page object.
 
-✅ **GOOD** - Split by screen: `users-page.ts` (list) and `add-user-page.ts` (form)
+✅ **GOOD** - Split by screen: `orders-list-page.ts` (list) and `order-form-page.ts` (form)
 ❌ **BAD** - Single page with locators for both list and form when they live on different views
 
 ### Base Page and Shared Locators
@@ -74,7 +74,7 @@ Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects ra
 
 ## Empty-Field Validation Scenarios
 
-When validating required-field error messages, use **individual, explicit Given steps**—one per test case. Create user, set state, then mutate the field (e.g. `user.username = ""`). Match the pattern in `login-user-test-data-steps.ts`.
+When validating required-field error messages, use **individual, explicit Given steps**—one per test case. Create user, set state, then mutate the field (e.g. `user.username = ""`). Use the pattern from your `{domain}-user-test-data-steps.ts` file.
 
 ✅ **GOOD** - Each Given is a plain async function; no factory or mapping
 ❌ **BAD** - Factory function or mapping object to generate steps

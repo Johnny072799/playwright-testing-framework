@@ -1,6 +1,6 @@
 # E2E Test Framework
 
-A Playwright + Cucumber (TypeScript) setup for browser end-to-end tests. Built for SaaS products and handoff to in-house teams.
+A Playwright + Cucumber (TypeScript) setup for browser end-to-end tests. Built for handoff—copy into any repo, add your env vars and secrets, and adapt the feature/step structure to your application's domains.
 
 ---
 
@@ -83,7 +83,7 @@ tests/cucumber/
 └── cucumber-profiles.ts
 ```
 
-→ Full structure and conventions: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
+→ Full structure, naming conventions, and patterns: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
 
 ---
 

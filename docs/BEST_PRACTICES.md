@@ -6,7 +6,7 @@
 
 **If we consider how we will test the application before or while we develop it, testing becomes a natural extension of development rather than a burdensome afterthought.**
 
-Think about selectors, flows, and data needs up front. Collaborate with the app team on stable attributes (e.g. `data-testid`) when feasible. This reduces friction later and keeps tests maintainable.
+Think about locators, flows, and what data we need up front. Collaborate with the app team on stable attributes (e.g. `data-testid`) when feasible. This reduces friction later and keeps tests maintainable.
 
 ---
 
@@ -24,7 +24,7 @@ Think about selectors, flows, and data needs up front. Collaborate with the app 
 
 ```typescript
 Then("I should see the error message", async function (this: CustomWorld) {
-  const errorLocator = this.page.locator(".oxd-alert-content-text");
+  const errorLocator = this.page.locator("[data-testid='error-message']");
   const errorText = await errorLocator.textContent();
 });
 ```
@@ -32,15 +32,15 @@ Then("I should see the error message", async function (this: CustomWorld) {
 ✅ **GOOD** – Locator in page object:
 
 ```typescript
-// In login-page.ts
+// In sign-in-page.ts (or your domain page)
 errorMessage(): Locator {
-  return this.page.locator(".oxd-alert-content-text");
+  return this.page.locator("[data-testid='error-message']");
 }
 
-// In login-steps.ts
+// In auth-steps.ts (or your domain steps)
 Then("I should see the error message", async function (this: CustomWorld) {
-  const loginPage = new LoginPage(this.page);
-  const errorText = await loginPage.errorMessage().textContent();
+  const signInPage = new SignInPage(this.page);
+  const errorText = await signInPage.errorMessage().textContent();
 });
 ```
 
@@ -50,7 +50,7 @@ Then("I should see the error message", async function (this: CustomWorld) {
 
 ```typescript
 errorMessage(): Promise<string | null> {
-  return this.page.locator(".oxd-alert-content-text").textContent();
+  return this.page.locator("[data-testid='error-message']").textContent();
 }
 ```
 
@@ -58,7 +58,7 @@ errorMessage(): Promise<string | null> {
 
 ```typescript
 errorMessage(): Locator {
-  return this.page.locator(".oxd-alert-content-text");
+  return this.page.locator("[data-testid='error-message']");
 }
 ```
 
@@ -70,7 +70,7 @@ Page objects: hold locators, contain interaction logic, handle waits, import con
 
 ### Step DON'Ts
 
-- Include business logic or helper functions—move to page objects or support
+- Include business logic or helper functions—move those to page objects or support
 - Perform complex data transformations—keep steps thin
 - Pass the world object to support classes—pass only needed data as parameters
 
@@ -80,7 +80,7 @@ Page objects: hold locators, contain interaction logic, handle waits, import con
 
 When navigation goes to a different URL or distinct UI (e.g. list vs. add form), use a separate page object.
 
-✅ **GOOD** – `users-page.ts` (list) and `add-user-page.ts` (form)  
+✅ **GOOD** – `orders-list-page.ts` (list) and `order-form-page.ts` (form)  
 ❌ **BAD** – Single page with locators for both list and form
 
 ---
@@ -123,7 +123,7 @@ Use typed interfaces (e.g. `User`) for method parameters. Pass domain objects ra
 
 ## Given, When, Then
 
-- **Given** – Set up preconditions and state. Invalid or missing data belongs here—clear or modify the data (e.g. `essUser.userRole = ""`).
+- **Given** – Set up preconditions and state. Invalid or missing data belongs here—clear or modify the data (e.g. `user.role = ""`).
 - **When** – Perform the action under test (e.g. click, submit, navigate). Use page object methods. Verify required data is in the world before calling.
 - **Then** – Verify the outcome. Perform immediate UI checks (e.g. element visible, text correct, error message shown).
 
@@ -152,7 +152,7 @@ Declare each step once, using the keyword that matches its role in the feature: 
 
 ## Given steps mould the world
 
-**Given** steps set up state. Invalid or missing data belongs there—clear or modify the data (e.g. `essUser.userRole = ""`).
+**Given** steps set up state. Invalid or missing data belongs there—clear or modify the data (e.g. `user.role = ""`).
 
 **Subsequent methods** should adapt: if a field is empty, don't fill it. Do not pass explicit "omit" flags; the data itself carries the intent.
 
@@ -165,7 +165,7 @@ Declare each step once, using the keyword that matches its role in the feature: 
 
 ## Empty-field validation scenarios
 
-When validating required-field error messages, use **individual, explicit Given steps**—one per test case. Create user, set state, then mutate the field. Match the pattern in `login-user-test-data-steps.ts`.
+When validating required-field error messages, use **individual, explicit Given steps**—one per test case. Create user, set state, then mutate the field. Use the pattern from your `{domain}-user-test-data-steps.ts` file.
 
 ✅ **GOOD** – Each Given is a plain async function  
 ❌ **BAD** – Factory function or mapping object to generate steps
@@ -174,7 +174,7 @@ When validating required-field error messages, use **individual, explicit Given 
 
 ## Step file organization
 
-- **Domain folders** – Group by area (e.g. `steps/login/`, `steps/checkout/`).
+- **Domain folders** – Group by area (e.g. `steps/auth/`, `steps/checkout/`).
 - **Flow steps** (`{domain}-steps.ts`) – Page navigation, actions, assertions.
 - **User test data steps** (`{domain}-user-test-data-steps.ts`) – Set up user credentials in state.
 - **Feature-specific steps** (`{feature}-steps.ts`) – Steps for a specific feature within a domain.
@@ -204,4 +204,4 @@ Before merging, verify:
 - [ ] Locators are maintained in page classes
 - [ ] No framework-specific code in support utilities
 - [ ] Error messages are meaningful
-- [ ] Code follows naming conventions (see PROJECT_STRUCTURE)
+- [ ] Code follows naming conventions (see [PROJECT_STRUCTURE](PROJECT_STRUCTURE.md))
