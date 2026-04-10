@@ -1,7 +1,7 @@
-# # Smoke tests on pull requests only. Must pass before merge.
-# # Configure in branch protection: require "Smoke" check.
-# #
-# # Setup: Add repo secrets: BASE_URL, TEST_USERNAME, TEST_PASSWORD
+# Smoke tests on pull requests only. Must pass before merge.
+# Configure in branch protection: require "Smoke" check.
+#
+# Setup: Add repo secrets: BASE_URL, TEST_USERNAME, TEST_PASSWORD
 
 # name: Smoke
 
