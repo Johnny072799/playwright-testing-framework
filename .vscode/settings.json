@@ -1,4 +1,4 @@
 {
-  "cucumber.glue": ["tests/cucumber/**/*.ts"],
-  "cucumber.features": ["tests/cucumber/features/**/*.feature"]
+  "playwright.reuseBrowser": false,
+  "playwright.showTrace": false
 }

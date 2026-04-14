@@ -1,0 +1,8 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="15.984625">
+<testsuite name="login/login.spec.ts" timestamp="2026-04-14T13:21:18.660Z" hostname="chromium" tests="2" failures="0" skipped="0" time="13.773" errors="0">
+<testcase name="OrangeHRM Portal Login › Validate login with invalid credentials: I do not have a valid username" classname="login/login.spec.ts" time="7.942">
+</testcase>
+<testcase name="OrangeHRM Portal Login › Validate login with invalid credentials: I do not have a valid password" classname="login/login.spec.ts" time="5.831">
+</testcase>
+</testsuite>
+</testsuites>
