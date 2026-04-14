@@ -141,3 +141,7 @@ vite.config.ts.timestamp-*
 
 # E2E failure artifacts (screenshots, traces) - local debugging only
 artifacts/
+
+# Playwright generated output - never commit
+playwright-reports/
+test-results/
