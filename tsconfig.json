@@ -1,24 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "rootDir": ".",
-    "outDir": "dist"
+    "skipLibCheck": true
   },
   "include": [
     "playwright.config.ts",
-    "fixtures/**/*.ts",
-    "tests/**/*.ts",
-    "pages/**/*.ts",
-    "support/**/*.ts"
+    "playwright/fixtures/**/*.ts",
+    "playwright/tests/**/*.ts",
+    "playwright/pages/**/*.ts",
+    "playwright/support/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "dist"
+    "node_modules"
   ]
 }

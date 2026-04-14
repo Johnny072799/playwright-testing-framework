@@ -2,10 +2,10 @@ import { defineConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, 'playwright/env/.env') });
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: './playwright/tests',
   timeout: 120_000,
   retries: parseInt(process.env.TEST_RETRIES || '0'),
   workers: parseInt(process.env.TEST_WORKERS || '1'),
