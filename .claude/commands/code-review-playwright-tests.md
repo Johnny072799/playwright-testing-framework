@@ -21,6 +21,14 @@ Then run:
 git diff origin/<base-branch> --name-only
 ```
 
+`git diff` only shows tracked-file changes — it misses newly created, not-yet-tracked files (e.g. a spec or page object just written by `create-playwright-spec`). Always also check untracked files and include them in the review set:
+
+```bash
+git status --porcelain | grep '^??' | awk '{print $2}'
+```
+
+If the calling context already knows the exact file paths (e.g. immediately after `create-playwright-spec` reports what it created), review those paths directly instead of relying on git discovery at all.
+
 Read each relevant `.spec.ts`, page object, support class, and fixture file before reporting.
 
 ## Review Checklist

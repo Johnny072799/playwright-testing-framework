@@ -1,13 +1,13 @@
 # Playwright Test Architecture Guidelines
 
-This document outlines the architectural patterns and standards for UI test automation using Playwright Test (`@playwright/test`). These guidelines apply to all repos that have completed (or are completing) migration off `@ncino/test-automation-framework`.
+This document outlines the architectural patterns and standards for UI test automation using Playwright Test (`@playwright/test`). These guidelines are project-agnostic — apply them to any repo built on Playwright Test, regardless of the application under test.
 
-**Target dependency footprint per repo:**
+**Typical dependency footprint:**
 - `@playwright/test` — test runner, assertions, built-in fixtures
-- `@ncino/salesforce-automation` — Salesforce connections, record management, cleanup
 - `dotenv` (optional) — `.env` file loading
+- Any domain-specific client libraries the project genuinely needs (a data-seeding SDK, an API client, a faker-style data generator) — add only when there's a real need
 
-Everything from nTAF, `@ncino/automation-foundation`, `@cucumber/cucumber`, and `chai` is eliminated.
+Avoid dependencies on legacy test frameworks (Cucumber/Gherkin runners, custom "automation foundation" wrapper packages) and third-party assertion libraries (`chai`, etc.) — Playwright's built-in `test`/`expect` and fixtures cover this.
 
 ---
 
@@ -25,13 +25,13 @@ Everything from nTAF, `@ncino/automation-foundation`, `@cucumber/cucumber`, and 
 
 ### 2. Classes Over Loose Functions
 
-Organize related behavior as methods on a class, not as standalone exported functions. This keeps code discoverable and self-documenting. When a new team member needs to understand loan operations, they should find a `LoanUtils` class, not hunt through a flat file of 20 exported functions.
+Organize related behavior as methods on a class, not as standalone exported functions. This keeps code discoverable and self-documenting. When a new team member needs to understand a piece of domain logic, they should find a class (e.g. `OrderUtils`, `TestDataBuilder`), not hunt through a flat file of exported functions.
 
 ### 3. No Duplication of Existing Abstractions
 
 Before creating a new interface, type, wrapper function, or utility class, check if one already exists:
 - In the codebase itself (search before you create)
-- In `@ncino/salesforce-automation` (for Salesforce types and connection interfaces)
+- In any domain-specific client library the project depends on
 - In `@playwright/test` (for `Page`, `Locator`, `BrowserContext`, `APIRequestContext`, etc.)
 
 If an existing type is close but not quite right, **extend** it rather than copying it.
@@ -40,7 +40,7 @@ If an existing type is close but not quite right, **extend** it rather than copy
 
 If a function simply calls a Playwright API with no additional logic, do not wrap it. Use the API directly.
 
-The old nTAF wrappers (`BrowserActions`, `NavigationActions`, `Elements`) no longer apply. Wrapping `page.goto(url)` in a `navigateTo(url)` function adds indirection with zero benefit.
+Wrapping `page.goto(url)` in a `navigateTo(url)` function adds indirection with zero benefit.
 
 A wrapper earns its existence only when it adds real value: retry logic, logging, domain-specific defaults, or multi-step orchestration.
 
@@ -51,29 +51,30 @@ A wrapper earns its existence only when it adds real value: retry logic, logging
 ```
 repo-root/
 ├── playwright.config.ts          # Browsers, timeouts, reporters, base URL, option fixtures
-├── .env.template                 # TEST_WORKERS, HEADLESS, REPORTS_PATH, etc.
+├── .env.template                 # Project-specific env vars (base URL, credentials, workers, etc.)
 ├── fixtures/
 │   ├── index.ts                  # Composes all fixtures, exports the single `test` and `expect`
-│   ├── salesforce.fixtures.ts    # Salesforce connection + record management + cleanup
-│   ├── pages.fixtures.ts         # All POM fixtures (loginPage, loanPage, dashboardPage, etc.)
+│   ├── auth.fixtures.ts          # Auth/session setup + teardown, if split out
+│   ├── pages.fixtures.ts         # All POM fixtures (loginPage, dashboardPage, etc.)
 │   └── ...                       # Additional domain fixture files only when needed
 ├── tests/
-│   ├── loans/
-│   │   ├── create-loan.spec.ts
-│   │   └── loan-details.spec.ts
-│   ├── onboarding/
-│   │   └── client-onboarding.spec.ts
+│   ├── login/
+│   │   └── login.spec.ts
+│   ├── checkout/
+│   │   └── checkout.spec.ts
 │   └── ...
 ├── pages/                        # Page Object Models
-│   ├── LoanPage.ts
+│   ├── LoginPage.ts
 │   ├── DashboardPage.ts
 │   └── ...
-├── support/                      # Domain-specific utility classes
-│   ├── loan-utils.ts
-│   ├── offer-utils.ts
+├── support/                      # Domain-specific utility classes (data builders, orchestration flows)
+│   ├── TestDataBuilder.ts
+│   ├── OrderUtils.ts
 │   └── ...
 └── package.json
 ```
+
+Small projects can flatten this (e.g. a single `fixtures/index.ts`, no domain subfolders under `tests/`) — the layer boundaries (fixtures / pages / support / tests) matter more than the exact folder depth.
 
 ---
 
@@ -88,7 +89,7 @@ Every repo has a `fixtures/` folder with a single `index.ts` that composes and r
 import { test, expect } from '../../fixtures';
 
 // NEVER import from individual fixture files in spec files:
-// import { test } from '../../fixtures/salesforce.fixtures';  // DON'T
+// import { test } from '../../fixtures/auth.fixtures';  // DON'T
 ```
 
 ### How Many Files?
@@ -103,17 +104,17 @@ fixtures/
 ```
 fixtures/
 ├── index.ts                    # Composes and re-exports test + expect
-├── salesforce.fixtures.ts      # Salesforce connection, record mgmt, cleanup
-└── pages.fixtures.ts           # All POM fixtures (loginPage, loanPage, etc.)
+├── auth.fixtures.ts            # Auth/session setup, cleanup
+└── pages.fixtures.ts           # All POM fixtures (loginPage, etc.)
 ```
 
 **Large repos (15+ custom fixtures):** Add domain files as needed.
 ```
 fixtures/
 ├── index.ts
-├── salesforce.fixtures.ts
+├── auth.fixtures.ts
 ├── pages.fixtures.ts
-├── auth.fixtures.ts            # Authentication fixtures (multi-role, SSO, etc.)
+├── data.fixtures.ts            # Test data seeding / cleanup
 └── api.fixtures.ts             # API client fixtures
 ```
 
@@ -122,18 +123,15 @@ fixtures/
 **Option A — chain `.extend()`:**
 ```ts
 // fixtures/index.ts
-import { test as salesforceTest } from './salesforce.fixtures';
+import { test as authTest } from './auth.fixtures';
 import { LoginPage } from '../pages/LoginPage';
-import { LoanPage } from '../pages/LoanPage';
 import { DashboardPage } from '../pages/DashboardPage';
 
-export const test = salesforceTest.extend<{
+export const test = authTest.extend<{
   loginPage: LoginPage;
-  loanPage: LoanPage;
   dashboardPage: DashboardPage;
 }>({
   loginPage: async ({ page }, use) => { await use(new LoginPage(page)); },
-  loanPage: async ({ page }, use) => { await use(new LoanPage(page)); },
   dashboardPage: async ({ page }, use) => { await use(new DashboardPage(page)); },
 });
 
@@ -144,10 +142,10 @@ export { expect } from '@playwright/test';
 ```ts
 // fixtures/index.ts
 import { mergeTests } from '@playwright/test';
-import { test as salesforceTest } from './salesforce.fixtures';
+import { test as authTest } from './auth.fixtures';
 import { test as pagesTest } from './pages.fixtures';
 
-export const test = mergeTests(salesforceTest, pagesTest);
+export const test = mergeTests(authTest, pagesTest);
 export { expect } from '@playwright/test';
 ```
 
@@ -158,15 +156,13 @@ export { expect } from '@playwright/test';
 fixtures/
 ├── index.ts
 ├── loginPage.fixture.ts
-├── loanPage.fixture.ts
 ├── dashboardPage.fixture.ts
-├── salesforceConnection.fixture.ts
-├── salesforceRecordManagement.fixture.ts
-└── salesforceCleanup.fixture.ts
+├── authSession.fixture.ts
+└── authCleanup.fixture.ts
 
 // BAD: fixtures mirroring test structure
 fixtures/
-├── loans.fixtures.ts
+├── checkout.fixtures.ts
 ├── onboarding.fixtures.ts
 ├── dashboard.fixtures.ts
 └── ...
@@ -185,12 +181,12 @@ Test files are the orchestration layer. Each `test()` call is a self-contained s
 - Use `const` / `let` for all test state (state lives in function scope, not on a shared object)
 - Group related tests with `test.describe` for logical organization
 - Use Playwright's `expect` exclusively for all assertions
-- Use `test.describe` tags (`{ tag: '@smoke' }`) for test categorization
+- Use `test.describe` tags as an array (`{ tag: ['@smoke'] }`) for test categorization
 - Keep tests focused: one logical scenario per `test()` call
 - Always import from `fixtures/index.ts`
 
 **DON'T:**
-- Store mutable state outside the test function
+- Store mutable state outside the test function (e.g. a `let` assigned in `beforeEach` that tests then reference) — if a test needs a configured page object, provide it via a fixture instead
 - Use `chai` or any assertion library other than Playwright's `expect`
 - Use `page.waitForTimeout()` — use auto-waiting locator assertions instead
 - Create helper functions directly in spec files (move to support classes or page objects)
@@ -199,32 +195,15 @@ Test files are the orchestration layer. Each `test()` call is a self-contained s
 ### Example
 
 ```ts
-// tests/loans/create-loan.spec.ts
+// tests/checkout/checkout.spec.ts
 import { test, expect } from '../../fixtures';
 
-test.describe('Loan Creation', { tag: '@smoke' }, () => {
-  test('create a loan application', async ({
-    page,
-    salesforceConnection,
-    salesforceRecordManagement,
-  }) => {
-    const { connectionData } = salesforceConnection;
+test.describe('Checkout', { tag: ['@smoke'] }, () => {
+  test('complete a purchase', async ({ page, authenticatedPage: _, checkoutPage }) => {
+    await checkoutPage.addItemToCart('sku-123');
+    await checkoutPage.submitOrder();
 
-    await page.goto(
-      `${connectionData.orgUrl}/secur/frontdoor.jsp?sid=${connectionData.accessToken}`
-    );
-
-    const loanId = await salesforceRecordManagement.createRecord('LLC_BI__Loan__c', {
-      Name: 'Test Loan',
-      LLC_BI__Amount__c: 500000,
-    });
-
-    await page.goto(
-      `${connectionData.orgUrl}/lightning/r/LLC_BI__Loan__c/${loanId}/view`
-    );
-    await expect(page.getByText('Test Loan')).toBeVisible();
-
-    // Cleanup is automatic via salesforceRecordManagement fixture teardown
+    await expect(page.getByText('Order confirmed')).toBeVisible();
   });
 });
 ```
@@ -233,7 +212,7 @@ test.describe('Loan Creation', { tag: '@smoke' }, () => {
 
 ## Page Object Model (POM)
 
-Page objects encapsulate all page-specific interactions, locators, and methods. They accept a Playwright `Page` in their constructor and expose typed methods. They do not import from `@playwright/test` (only from playwright types), and do not reference fixtures, World objects, or any test runner concept.
+Page objects encapsulate all page-specific interactions, locators, and methods. They accept a Playwright `Page` in their constructor and expose typed methods. They do not import from `@playwright/test` (only from playwright types), and do not reference fixtures or any test runner concept.
 
 ### Structure
 
@@ -256,7 +235,7 @@ Each page class contains:
 **DON'T:**
 - Share locators between unrelated pages
 - Put business logic in page objects
-- Import or reference fixtures, World, or test runner concepts
+- Import or reference fixtures or test runner concepts
 - Create wrapper methods that just call a single Playwright API with no added logic
 
 ### Example
@@ -270,18 +249,15 @@ export class LoginPage {
   readonly emailField: Locator;
   readonly passwordField: Locator;
   readonly loginButton: Locator;
-  readonly useSsoButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.emailField = page.locator('[data-cy="email-field"]');
-    this.passwordField = page.locator('[data-cy="password-field"]');
-    this.loginButton = page.locator('[data-cy="sign-in-btn"]');
-    this.useSsoButton = page.locator('[data-cy="Use sso"]');
+    this.emailField = page.locator('[data-testid="email-field"]');
+    this.passwordField = page.locator('[data-testid="password-field"]');
+    this.loginButton = page.locator('[data-testid="sign-in-btn"]');
   }
 
   async login(username: string, password: string) {
-    await this.page.waitForLoadState('networkidle');
     await this.emailField.fill(username);
     await this.passwordField.fill(password);
     await this.loginButton.click();
@@ -318,13 +294,14 @@ test('verify login button', async ({ page }) => {
 
 ## Fixtures
 
-Fixtures are Playwright's dependency injection system. They replace `ScenarioWorld`, Cucumber hooks, and manual browser lifecycle management. Each fixture provides exactly one resource with co-located setup and teardown.
+Fixtures are Playwright's dependency injection system. Each fixture provides exactly one resource with co-located setup and teardown.
 
 ### Rules
 
 **DO:**
-- One fixture per concern (e.g., `salesforceConnection`, `salesforceRecordManagement`, `loginPage`) — no god-fixtures
+- One fixture per concern (e.g., `authSession`, `loginPage`) — no god-fixtures
 - Co-locate setup and teardown in the same fixture using the `use()` pattern
+- Push per-test preconditions (navigation, seeding, auth) into the fixture that provides the relevant object, rather than a `beforeEach` block in the spec — this avoids mutable shared state at the describe scope
 - Use worker-scoped fixtures (`{ scope: 'worker' }`) for expensive operations like account creation or service connections
 - Use auto fixtures (`{ auto: true }`) for cross-cutting concerns like failure screenshots or logging
 - Use option fixtures (`{ option: true }`) for configuration that varies per project or environment
@@ -332,59 +309,28 @@ Fixtures are Playwright's dependency injection system. They replace `ScenarioWor
 - Export a single `test` and `expect` from `fixtures/index.ts`
 
 **DON'T:**
-- Create a "god fixture" that bundles multiple concerns into one object (recreates the World anti-pattern)
+- Create a "god fixture" that bundles multiple unrelated concerns into one object
 - Put teardown in `test.afterEach` when it pairs with fixture setup (use the fixture's post-`use()` teardown instead)
 - Manually manage browser/context lifecycle (Playwright's built-in `page`, `context`, `browser` fixtures handle this)
 - Create test-scoped fixtures for expensive operations (use worker scope instead)
 
-### Example: Salesforce Fixtures
+### Example: Auth Fixture
 
 ```ts
-// fixtures/salesforce.fixtures.ts
+// fixtures/auth.fixtures.ts
 import { test as base } from '@playwright/test';
-import {
-  Connections,
-  SalesforceRecordManagement,
-  SalesforceRecordCleanup,
-} from '@ncino/salesforce-automation';
+import { LoginPage } from '../pages/LoginPage';
 
-type SalesforceFixtures = {
-  salesforceConnection: {
-    connection: SalesforceConnection;
-    connectionData: SalesforceConnectionData;
-    userStorage?: OrgUserStorage;
-  };
-  salesforceRecordManagement: SalesforceRecordManagement;
+type AuthFixtures = {
+  authenticatedPage: void;
 };
 
-type SalesforceOptions = {
-  onePasswordItem: string;
-  onePasswordSection: string;
-};
-
-export const test = base.extend<SalesforceFixtures & SalesforceOptions>({
-  onePasswordItem: ['', { option: true }],
-  onePasswordSection: ['', { option: true }],
-
-  salesforceConnection: async ({ onePasswordItem, onePasswordSection }, use) => {
-    const result = await Connections.connectToSalesforce(onePasswordItem, onePasswordSection);
-    await use({
-      connection: result.connection,
-      connectionData: result.connection.sfConnData,
-      userStorage: result.userStorage,
-    });
-  },
-
-  salesforceRecordManagement: async ({ salesforceConnection }, use) => {
-    const mgmt = new SalesforceRecordManagement(salesforceConnection.connection);
-    await use(mgmt);
-    // Teardown: automatic cleanup of all records created during the test
-    const cleanup = new SalesforceRecordCleanup(
-      salesforceConnection.connection,
-      mgmt.storage,
-      { attemptToFindChildRecords: true },
-    );
-    await cleanup.cleanupRecordsWithCompositeCollections();
+export const test = base.extend<AuthFixtures>({
+  authenticatedPage: async ({ page }, use) => {
+    const loginPage = new LoginPage(page);
+    await page.goto(process.env.BASE_URL!);
+    await loginPage.login(process.env.USERNAME!, process.env.PASSWORD!);
+    await use();
   },
 });
 
@@ -395,49 +341,36 @@ export { expect } from '@playwright/test';
 
 ## Support Classes
 
-Support classes provide reusable, domain-specific utilities that are not page-specific. They are plain TypeScript classes that operate on data, orchestrate multi-step domain operations, or provide shared helpers.
+Support classes provide reusable, domain-specific utilities that are not page-specific. They are plain TypeScript classes that operate on data, orchestrate multi-step domain operations, or provide shared helpers (e.g. test data builders, multi-step flows that span several page objects).
 
 ### Rules
 
 **DO:**
-- Organize related functions as methods on a class (e.g., `OfferUtils`, `LoanUtils`, `UserDataBuilder`)
+- Organize related functions as methods on a class (e.g., `TestDataBuilder`, `OrderUtils`)
 - Use static methods when the class holds no instance state
 - Use `process.env` directly for environment variables
-- Accept specific parameters, not framework objects
-- Add JSDoc comments for complex methods
+- Accept specific parameters, not framework objects — unless the class genuinely orchestrates UI interaction across page objects (e.g. a multi-step login/onboarding flow), in which case accepting a `Page` is appropriate
+- Add a short comment for complex methods only where the *why* isn't obvious
 - Keep classes focused: one domain concept per class
 
 **DON'T:**
 - Create standalone exported functions outside of a class
-- Duplicate interfaces or types that already exist in `@ncino/salesforce-automation` or `@playwright/test`
-- Create wrapper classes around Playwright APIs that add no logic (no `BrowserActions`, no `NavigationActions`, no `Elements`)
-- Pass fixture objects or `page` to support classes unless the class genuinely needs to perform UI interactions (in which case it should probably be a page object instead)
+- Duplicate interfaces or types that already exist in a dependency or `@playwright/test`
+- Create wrapper classes around Playwright APIs that add no logic
+- Pass fixture objects to support classes (a plain `Page` is fine when genuinely needed)
 
 ### Example
 
 ```ts
-// support/offer-utils.ts
-import { OffersPage } from '../pages/OffersPage';
+// support/OrderUtils.ts
 
-export class OfferUtils {
-  /**
-   * Parses the offer details (APR, Term, Payments) from the offer card.
-   */
-  static parseOfferDetails(offerText: string): { apr: string; term: string; payment: string } {
-    const aprMatch = offerText.match(/APR\s+([\d.]+)/);
-    const termMatch = offerText.match(/Term\s+([\d]+)/);
-    const paymentsMatch = offerText.match(/Payments\s+\$([\d.,]+)/);
-    if (!aprMatch || !termMatch || !paymentsMatch) {
-      throw new Error('Failed to parse offer details from the string.');
+export class OrderUtils {
+  static parseOrderTotal(orderText: string): number {
+    const match = orderText.match(/Total:\s+\$([\d.,]+)/);
+    if (!match) {
+      throw new Error('Failed to parse order total from the string.');
     }
-    return { apr: aprMatch[1], term: termMatch[1], payment: paymentsMatch[1] };
-  }
-
-  /**
-   * Waits for the offers screen to load by checking card title visibility.
-   */
-  static async waitForOffersScreenToLoad(offersPage: OffersPage): Promise<void> {
-    await offersPage.cardTitle.waitFor({ state: 'visible', timeout: 60000 });
+    return parseFloat(match[1].replace(',', ''));
   }
 }
 ```
@@ -455,7 +388,7 @@ dotenv.config();
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 120_000,
+  timeout: 60_000,
   retries: parseInt(process.env.TEST_RETRIES || '0'),
   workers: parseInt(process.env.TEST_WORKERS || '5'),
   fullyParallel: true,
@@ -464,13 +397,9 @@ export default defineConfig({
     video: 'retain-on-failure',
     trace: 'retain-on-failure',
     headless: process.env.HEADLESS !== 'false',
-    onePasswordItem: process.env.ONEPASSWORD_ITEM || '',
-    onePasswordSection: process.env.ONEPASSWORD_SECTION || '',
   },
   reporter: [
-    ['html', { open: 'never', outputFolder: process.env.REPORTS_PATH || 'tests/playwright/reports/' }],
-    ['json', { outputFile: 'tests/playwright/reports/test-results.json' }],
-    ['junit', { outputFile: 'tests/playwright/reports/junit-results.xml' }],
+    ['html', { open: 'never', outputFolder: process.env.REPORTS_PATH || 'playwright-report/' }],
   ],
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
@@ -481,11 +410,12 @@ export default defineConfig({
 ### `.env.template`
 
 ```
-ONEPASSWORD_ITEM=
-ONEPASSWORD_SECTION=
+BASE_URL=
+USERNAME=
+PASSWORD=
 TEST_WORKERS=5
 HEADLESS=true
-REPORTS_PATH=tests/playwright/reports/
+REPORTS_PATH=playwright-report/
 TEST_RETRIES=0
 ```
 
@@ -495,21 +425,38 @@ TEST_RETRIES=0
 
 ### Naming Conventions
 
-| Target | Convention |
-|---|---|
-| Files | `kebab-case` (`create-loan.spec.ts`, `loan-utils.ts`) |
-| Class files | `PascalCase` (`LoanPage.ts`) |
-| Classes | `PascalCase` (`LoanPage`, `OfferUtils`) |
-| Methods / variables | `camelCase` (`createLoan`, `loanId`) |
+Pick one convention per project and apply it consistently — the specific casing matters less than uniformity across every file of a given kind.
+
+| Target | Convention | Example |
+|---|---|---|
+| Spec files | `kebab-case` or `camelCase` (match the rest of the repo) | `create-order.spec.ts` or `createOrder.spec.ts` |
+| Page/class files | Match the exported class name (`PascalCase`) | `LoginPage.ts`, `OrderUtils.ts` |
+| Classes | `PascalCase` | `LoginPage`, `OrderUtils` |
+| Methods / variables | `camelCase` | `createOrder`, `orderId` |
 | Constants | `UPPER_SNAKE_CASE` for env vars only; regular `const` uses `camelCase` |
 | Test descriptions | Plain language describing user-visible behavior |
+
+### Locator Strategy
+
+Playwright's official guidance ranks locators by how closely they reflect what a real user or assistive technology perceives — not by resistance to markup changes. In order of preference:
+
+1. `getByRole()` — reflects how users and assistive technology perceive the page
+2. `getByText()` — for non-interactive elements (divs, spans)
+3. `getByLabel()` — for form fields
+4. `getByPlaceholder()` — for form elements without a label but with placeholder text
+5. `getByAltText()` — for images and other elements supporting `alt`
+6. `getByTitle()` — for elements with a `title` attribute
+7. `getByTestId()` (`data-testid`, `data-cy`) — fallback when no user-facing locator works
+8. CSS/XPath (`page.locator(...)`) — last resort only
+
+Test IDs are the most resilient to markup churn, but they aren't user-facing. Reach for them when the app's semantic markup is genuinely poor, or when the team has explicitly standardized on test-ID-based testing — not as the default first choice.
 
 ### Wait Strategies
 
 - **Prefer Playwright's auto-waiting.** Locator actions (`click()`, `fill()`, `waitFor()`) and web assertions (`toBeVisible()`, `toHaveText()`) auto-wait by default.
 - **Never use `page.waitForTimeout()`.** This is an arbitrary sleep and creates flaky tests. Wait for a specific condition instead.
-- **Use `page.waitForLoadState()` sparingly** — only when you genuinely need to wait for network idle (e.g., after `frontdoor.jsp` authentication).
-- Playwright reveals, not causes, race conditions. If a test is flaky after migration, the timing issue was pre-existing. Fix the root cause with proper auto-waiting assertions.
+- **Use `page.waitForLoadState()` sparingly** — only when you genuinely need to wait for network idle after a navigation or redirect-heavy auth flow.
+- Playwright reveals, not causes, race conditions. If a test is flaky, the timing issue is pre-existing. Fix the root cause with proper auto-waiting assertions.
 
 ### Error Handling
 
@@ -519,7 +466,7 @@ TEST_RETRIES=0
 
 ### Data Management
 
-- Use API-based data creation via `salesforceRecordManagement` instead of UI flows for test data setup
+- Prefer API-based or fixture-based data creation over UI flows for test data setup where a client is available (e.g. a faker-based generator, a seeding API)
 - Let fixture teardown handle cleanup automatically
 - Never hardcode test data that should come from environment configuration
 
@@ -531,32 +478,32 @@ TEST_RETRIES=0
 
 ```ts
 // BAD: loose functions scattered in a file
-export function parseLoanAmount(text: string): number { ... }
-export function formatLoanName(name: string): string { ... }
-export function validateLoanStatus(status: string): boolean { ... }
+export function parseOrderTotal(text: string): number { ... }
+export function formatOrderName(name: string): string { ... }
+export function validateOrderStatus(status: string): boolean { ... }
 
 // GOOD: organized as a class
-export class LoanUtils {
-  static parseLoanAmount(text: string): number { ... }
-  static formatLoanName(name: string): string { ... }
-  static validateLoanStatus(status: string): boolean { ... }
+export class OrderUtils {
+  static parseOrderTotal(text: string): number { ... }
+  static formatOrderName(name: string): string { ... }
+  static validateOrderStatus(status: string): boolean { ... }
 }
 ```
 
 ### Rule 2: No Duplicate Interfaces
 
 ```ts
-// BAD: re-declaring a type that already exists in @ncino/salesforce-automation
-interface SalesforceConnectionInfo {
-  orgUrl: string;
-  accessToken: string;
+// BAD: re-declaring a type that already exists in a dependency
+interface ConnectionInfo {
+  url: string;
+  token: string;
 }
 
 // GOOD: import the existing type
-import { SalesforceConnectionData } from '@ncino/salesforce-automation';
+import { ConnectionData } from 'some-client-library';
 
 // GOOD: extend if you need extra fields
-interface ExtendedConnectionData extends SalesforceConnectionData {
+interface ExtendedConnectionData extends ConnectionData {
   customField: string;
 }
 ```
@@ -573,16 +520,13 @@ async function navigateToUrl(page: Page, url: string) {
 await page.goto(url);
 
 // GOOD: wrapper adds real value (multi-step orchestration)
-async function authenticateAndNavigate(
-  page: Page,
-  connectionData: SalesforceConnectionData,
-  targetPath: string,
-) {
-  await page.goto(
-    `${connectionData.orgUrl}/secur/frontdoor.jsp?sid=${connectionData.accessToken}`
-  );
+async function loginAndNavigate(page: Page, credentials: Credentials, targetPath: string) {
+  await page.goto(process.env.BASE_URL!);
+  await page.locator('[data-testid="username"]').fill(credentials.username);
+  await page.locator('[data-testid="password"]').fill(credentials.password);
+  await page.locator('[data-testid="submit"]').click();
   await page.waitForLoadState('networkidle');
-  await page.goto(`${connectionData.orgUrl}${targetPath}`);
+  await page.goto(`${process.env.BASE_URL}${targetPath}`);
 }
 ```
 
@@ -590,8 +534,8 @@ async function authenticateAndNavigate(
 
 ```ts
 // fixtures/index.ts — canonical export for all fixture types
-export { test, expect } from './salesforce.fixtures';
-export type { SalesforceFixtures, SalesforceOptions } from './salesforce.fixtures';
+export { test, expect } from './auth.fixtures';
+export type { AuthFixtures } from './auth.fixtures';
 
 // Every spec file imports from this single source
 import { test, expect } from '../../fixtures';

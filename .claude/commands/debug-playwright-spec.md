@@ -100,6 +100,8 @@ DEBUG=pw:api npx playwright test <path-to-spec>
 
 ### Step 4: Common Fixes
 
+Before applying any fix, check `playwright-best-practices` — a fix should never reintroduce a violation it forbids (e.g. adding a helper function to a spec file, wrapping a single Playwright API call with no added logic, or putting an assertion inside a page object to work around a failure).
+
 #### Timing issues
 
 ```typescript
@@ -115,23 +117,26 @@ await expect(page.locator('[data-testid="element"]')).toBeVisible({ timeout: 30_
 
 #### Flaky selectors
 
-Prefer selectors in this order:
+Prefer selectors in the order defined in `playwright-best-practices`:
 
 ```typescript
-// 1. Test IDs (most stable)
+// 1. ARIA roles (reflects how users and assistive tech perceive the page)
+page.getByRole('button', { name: 'Submit' });
+
+// 2. Visible text (non-interactive elements)
+page.getByText('Welcome back');
+
+// 3. Labels (for form inputs)
+page.getByLabel('Email address');
+
+// 4. Placeholder text (form elements without a label)
+page.getByPlaceholder('Enter your email');
+
+// 5. Test IDs (fallback when no user-facing locator works)
 page.locator('[data-testid="submit-btn"]');
 page.locator('[data-cy="submit-btn"]');
 
-// 2. ARIA roles (semantic and stable)
-page.getByRole('button', { name: 'Submit' });
-
-// 3. Visible text
-page.getByText('Welcome back');
-
-// 4. Labels (for form inputs)
-page.getByLabel('Email address');
-
-// 5. Scope to a parent to resolve ambiguity
+// 6. Scope to a parent to resolve ambiguity
 page.locator('.card').filter({ hasText: 'Order' }).locator('[data-testid="details-btn"]');
 ```
 

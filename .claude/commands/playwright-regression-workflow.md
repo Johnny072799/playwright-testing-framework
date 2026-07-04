@@ -22,6 +22,8 @@ Read `.github/workflows/` to list existing workflow files. Look for a file that:
 
 If multiple orchestrators exist, ask the user which one to add to.
 
+If **no** orchestrator exists yet (no `.github/workflows/` directory, or none of the files call a reusable workflow), stop and tell the user to run `scaffold-playwright-framework` first — it creates the baseline `pw-orchestrator.yml`, `pw-regression-template.yml`, `pw-smoke.yml`, and `pw-regression.yml` with `@smoke`/`@regression` as the initial suites. Re-run this skill afterward to add the new suite.
+
 ### Step 2 — Understand the orchestrator structure
 
 Read the orchestrator file and identify:

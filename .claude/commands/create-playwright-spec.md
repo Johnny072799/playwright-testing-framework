@@ -10,6 +10,17 @@ The user will describe the test they want to create. This could be:
 - A specific page or flow to test
 - A set of acceptance criteria or scenarios
 
+## Pre-Flight: Confirm the Framework Exists
+
+```bash
+find . -name "playwright.config.ts" -not -path "*/node_modules/*"
+ls fixtures/index.ts pages/BasePage.ts 2>/dev/null
+```
+
+If either is missing, stop and run `scaffold-playwright-framework` first — this skill assumes the fixtures/pages/support/tests layout and `fixtures/index.ts` entry point already exist.
+
+Before writing any code, check `playwright-best-practices` for the relevant section (spec structure, page object rules, fixture composition) — it's the canonical reference and takes precedence over anything below if they ever diverge.
+
 ## File Placement
 
 First, look at where existing spec files live:
@@ -97,6 +108,26 @@ export class MyPage extends BasePage {
 - No assertions inside page objects — return values or perform actions only
 - No zero-value wrapper methods (don't wrap a single Playwright API call with no added logic)
 - Store the page as `protected readonly page: Page` — accept nothing else in the constructor unless the class genuinely needs it
+
+### Wiring the page object into fixtures (MANDATORY when reused across tests)
+
+A new page object is not usable via `{ page, loginPage }`-style destructuring until it's added as a fixture. After creating the page object, add it to `fixtures/index.ts` (or the relevant domain fixture file, per `playwright-best-practices`' fixture composition rules):
+
+```ts
+// fixtures/index.ts
+import { LoginPage } from '../pages/LoginPage';
+
+export const test = base.extend<{ loginPage: LoginPage /* ...existing fixtures */ }>({
+  loginPage: async ({ page }, use) => {
+    await use(new LoginPage(page));
+  },
+  // ...existing fixtures
+});
+```
+
+If the spec needs a logged-in state (e.g. most flows past the login page), add an `authenticatedPage` fixture that performs the login and depends on `loginPage`, rather than calling login steps inline in the test body.
+
+Only inline `new LoginPage(page)` directly in the spec (skipping the fixture) if this page object is genuinely used in exactly one spec file and unlikely to be reused.
 
 ## Common Patterns
 
@@ -216,5 +247,5 @@ find . -name "playwright.config.ts" -not -path "*/node_modules/*"
 - NEVER define helper functions (`function` or `async function`) in spec files. All reusable logic must live in support/utility classes. Only test-specific inline setup stays in the test body.
 - ALWAYS import `test` and `expect` from the project's `fixtures/` entry point — never from `@playwright/test` directly.
 - NEVER use `page.waitForTimeout()` — use locator assertions or `waitFor({ state })` instead.
-- ALWAYS prefer `data-testid` or `data-cy` selectors when available; fall back to `getByRole`, `getByText`, or `getByLabel`.
+- ALWAYS follow the locator hierarchy in `playwright-best-practices`: `getByRole` → `getByText` → `getByLabel` → `getByPlaceholder` → `getByAltText` → `getByTitle` → `getByTestId` → CSS/XPath. Don't default to `data-testid` just because it's available on the element.
 - ALWAYS run the test after creation to validate it works.
